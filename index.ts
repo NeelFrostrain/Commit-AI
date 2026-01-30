@@ -18,9 +18,11 @@ const rl = readline.createInterface({
 program
   .name("commit-ai")
   .description("AI-powered git analysis and auto-committer")
-  .version("1.1.2");
+  .version("1.2.0")
+  .option("-c, --commit", "enable commit mode (prompts to commit changes)")
+  .option("-y, --yes", "skip confirmation prompt (requires -c)");
 
-program.action(async () => {
+program.action(async (options) => {
   const apiKey = process.env.GROQ_API_KEY;
 
   if (!apiKey) {
@@ -39,10 +41,9 @@ program.action(async () => {
 
     console.log("🔍 commit-ai is scanning your changes...");
 
-    // 1. Stage changes (respects .gitignore naturally)
+    // Stage changes for analysis
     await git.add(["--intent-to-add", "."]);
 
-    // 2. Prepare diff with filters to save tokens (avoids 413 error)
     const excludePatterns = [
       ":!package-lock.json",
       ":!bun.lockb",
@@ -55,10 +56,8 @@ program.action(async () => {
 
     let diff: string = "";
     try {
-      // Normal diff against HEAD
       diff = await git.diff(["HEAD", "--", ".", ...excludePatterns]);
     } catch (e) {
-      // Fallback for initial commit (diff against empty tree)
       const EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
       diff = await git.diff([EMPTY_TREE_HASH, "--", ".", ...excludePatterns]);
     }
@@ -68,7 +67,6 @@ program.action(async () => {
       return;
     }
 
-    // 3. Strict token management (Stay under Groq's 6000 TPM limit)
     const MAX_CHAR = 5000;
     if (diff.length > MAX_CHAR) {
       diff =
@@ -77,13 +75,13 @@ program.action(async () => {
     }
 
     const prompt = `
-      You are an expert software engineer. Analyze this Git diff and provide:
-      1. A bulleted "REPORT" of technical changes.
-      2. A "COMMIT_MESSAGE" following Conventional Commits.
+      You are an expert engineer. Analyze this Git diff.
+      1. Provide a bulleted "REPORT" of technical changes.
+      2. Provide a "COMMIT_MESSAGE" (Conventional Commits style).
       
       Response Format:
       REPORT:
-      - detail 1
+      - change details
       COMMIT_MESSAGE:
       type(scope): description
 
@@ -91,14 +89,14 @@ program.action(async () => {
       ${diff}
     `;
 
-    console.log("🚀 AI is drafting your professional commit...");
+    console.log("🚀 AI is drafting your professional report...");
 
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
           content:
-            "You are commit-ai, a specialized assistant that only generates professional Git documentation.",
+            "You are commit-ai, a specialized assistant for professional Git documentation.",
         },
         { role: "user", content: prompt },
       ],
@@ -107,32 +105,39 @@ program.action(async () => {
     });
 
     const response = chatCompletion.choices[0]?.message?.content || "";
-
-    // Extract the commit message part
     const commitMsg = response.split(/COMMIT_MESSAGE:/i)[1]?.trim() || "";
 
     console.log("\n--- 📝 commit-ai: PROFESSIONAL REPORT ---");
     console.log(response);
     console.log("------------------------------------------\n");
 
-    if (commitMsg) {
-      const confirm = await rl.question(
-        `🤔 Commit with message: "${commitMsg}"? (y/n): `,
-      );
+    // Logic for committing
+    if (options.commit && commitMsg) {
+      let shouldCommit = false;
 
-      if (confirm.toLowerCase() === "y") {
-        await git.add("."); // Final stage
+      if (options.yes) {
+        console.log("⏩ Auto-commit flag detected (-y).");
+        shouldCommit = true;
+      } else {
+        const confirm = await rl.question(
+          `🤔 Commit with message: "${commitMsg}"? (y/n): `,
+        );
+        if (confirm.toLowerCase() === "y") shouldCommit = true;
+      }
+
+      if (shouldCommit) {
+        await git.add(".");
         await git.commit(commitMsg);
         console.log("✅ Changes committed successfully!");
       } else {
-        console.log("👋 Commit aborted by user.");
+        console.log("👋 Commit aborted.");
       }
+    } else if (!options.commit) {
+      console.log("💡 Note: Run with '-c' to enable commit mode.");
     }
   } catch (error: any) {
     if (error.status === 413) {
-      console.error(
-        "❌ Error: The diff is too large for the AI to process. Try staging smaller chunks.",
-      );
+      console.error("❌ Error: Diff too large for AI. Stage smaller chunks.");
     } else {
       console.error("❌ commit-ai Error:", error.message);
     }
