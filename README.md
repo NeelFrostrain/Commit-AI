@@ -3,6 +3,12 @@
 <div>
 
 **Professionalize your Git history with AI-generated Conventional Commits.**
+[![Version](https://img.shields.io/badge/version-1.2.8-magenta?style=flat-square)](https://github.com/NeelFrostrain/commit-ai)
+[![NPM](https://img.shields.io/badge/npm-v1.2.8-red?style=flat-square)](https://www.npmjs.com/package/@neelfrostrain/commit-ai)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-%3E%3D5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Groq](https://img.shields.io/badge/Groq-AI-cyan?style=flat-square)](https://groq.com)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
 Stop writing "fixed stuff" and start writing commits that tell a story.
 
