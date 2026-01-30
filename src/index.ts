@@ -11,10 +11,6 @@ import chalk from "chalk";
 
 const program = new Command();
 const git: SimpleGit = simpleGit();
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
 
 const origin = chalk.bold.magenta("[Commit-AI]");
 
@@ -58,7 +54,7 @@ async function getIgnorePatterns(): Promise<string[]> {
 program
   .name("commit-ai")
   .description("AI-powered git analysis and auto-committer")
-  .version("1.2.3")
+  .version("1.2.4")
   .option("-c, --commit", "enable commit mode")
   .option("-y, --yes", "skip confirmation prompt");
 
@@ -101,13 +97,14 @@ program.action(async (options) => {
     }
 
     const prompt = `
-      Analyze this Git diff.
-      1. Provide a bulleted "REPORT" of changes.
-      2. Provide a "COMMIT_MESSAGE" in "type: description" format.
+      Analyze this Git diff and provide a professional report.
+      1. Provide a bulleted "REPORT" of technical changes.
+      2. Provide a "COMMIT_MESSAGE" following these strict rules:
       
       STRICT RULES:
-      - Format: type: description (e.g., feat: add login)
-      - DO NOT use brackets around the type.
+      - Format: type: description
+      - NO BRACKETS (e.g., use "feat: message" NOT "[feat]: message")
+      - NO SCOPES (e.g., use "feat: message" NOT "feat(scope): message")
       - Use imperative mood.
       - No period at the end.
 
@@ -121,7 +118,7 @@ program.action(async (options) => {
       messages: [
         {
           role: "system",
-          content: "You are a professional Git workflow assistant.",
+          content: "You are commit-ai, a professional Git assistant.",
         },
         { role: "user", content: prompt },
       ],
@@ -130,22 +127,27 @@ program.action(async (options) => {
     });
 
     const response = chatCompletion.choices[0]?.message?.content || "";
+
+    // Improved parsing to handle Markdown bolding and headers
     const reportPart =
       response
-        .split(/COMMIT_MESSAGE:/i)[0]
-        ?.replace(/REPORT:/i, "")
+        .split(/COMMIT_MESSAGE/i)[0]
+        ?.replace(/REPORT:|\*\*/g, "")
         .trim() || "";
-    let titlePart = response.split(/COMMIT_MESSAGE:/i)[1]?.trim() || "";
 
-    /**
-     * CLEANING LOGIC:
-     * 1. Remove brackets if AI included them: [feat] -> feat
-     * 2. Ensure it follows type: description
-     */
+    let titlePart =
+      response
+        .split(/COMMIT_MESSAGE:?/i)[1]
+        ?.trim()
+        .split("\n")[0] || "";
+
+    // CLEANING: Strip AI formatting and force "type: description"
     titlePart = titlePart
-      .replace(/^\[(\w+)\]:/, "$1:") // Converts [feat]: to feat:
-      .replace(/^\[(\w+)\]/, "$1:") // Converts [feat] to feat:
-      .replace(/\.$/, ""); // Removes trailing period
+      .replace(/\*\*/g, "")
+      .replace(/^\[(\w+)\]:?\s*/, "$1: ")
+      .replace(/^(\w+)\([^)]+\):?\s*/, "$1: ")
+      .replace(/\.$/, "")
+      .trim();
 
     console.log(`\n${chalk.bold.cyan("─── AI SUGGESTION ───")}`);
     console.log(chalk.white(response));
@@ -153,39 +155,46 @@ program.action(async (options) => {
 
     if (options.commit && titlePart) {
       let shouldCommit = false;
+
       if (options.yes) {
         shouldCommit = true;
       } else {
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
+        });
+
         const confirm = await rl.question(
           `${origin} ${chalk.yellow("[Prompt]")}: Use this commit message? (y/n): `,
         );
+
         if (confirm.toLowerCase() === "y") shouldCommit = true;
+        rl.close();
       }
 
       if (shouldCommit) {
         await git.add(".");
         try {
+          // Title becomes first line, Report becomes the body
           await git.commit([titlePart, reportPart]);
           log.success(`Changes committed: ${chalk.dim(titlePart)}`);
         } catch (commitErr: any) {
-          // Handle commit-specific failures without treating them as critical for the whole run
           log.error(`Git Commit Failed: ${commitErr.message}`);
         }
       } else {
         log.warn("Commit aborted.");
       }
+    } else if (!options.commit) {
+      log.info("Run with '-c' to perform the actual commit.");
     }
   } catch (error: any) {
     log.error(`Critical Failure: ${error.message}`);
-  } finally {
-    rl.close();
   }
 });
 
-// Replace program.parse(process.argv); with this:
-async function run() {
+// Use parseAsync and wrap in a top-level async function to ensure process stays alive
+async function main() {
   await program.parseAsync(process.argv);
 }
 
-run();
-// program.parse(process.argv);
+main();
