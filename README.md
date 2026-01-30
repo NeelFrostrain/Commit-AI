@@ -146,5 +146,3 @@ Commit-AI automatically categorizes your work into:
 MIT © [Neel Frostrain](https://www.google.com/search?q=https://github.com/NeelFrostrain)
 
 ---
-
-Would you like me to generate a **`.gitignore`** file tailored for this project to ensure your `.env` and `bin/` files stay private?
