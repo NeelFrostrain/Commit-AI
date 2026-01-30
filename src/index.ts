@@ -46,7 +46,7 @@ async function getIgnorePatterns(): Promise<string[]> {
 
     // Use the explicit :(exclude) syntax which is more robust for patterns with wildcards (*)
     return combined.map((pattern) => `:(exclude)${pattern}`);
-  } catch {
+  } catch (e) {
     return defaultExcludes.map((pattern) => `:(exclude)${pattern}`);
   }
 }

@@ -5,11 +5,14 @@
   "main": "dist/index.js",
   "bin": {
     "commit-ai": "dist/index.js",
-    "git-commit-ai": "src/index.ts"
+    "git-commit-ai": "src/index.ts",
+    "commit-ai-build": "tsc",
+    "git-ai": "bin/commit-ai.exe"
   },
   "scripts": {
     "start": "bun run index.ts",
     "build": "tsc",
+    "build-exe": "bun build ./src/index.ts --compile --outfile ./bin/commit-ai.exe",
     "link-cmd": "bun link && bun link commit-ai"
   },
   "dependencies": {
