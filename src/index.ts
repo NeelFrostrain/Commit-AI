@@ -192,7 +192,7 @@ program.action(async (options) => {
 
       if (shouldCommit) {
         await git.add(".");
-        await git.commit([title, commitBody || report]);
+        await git.commit([title, report]);
         log.success(`Changes committed: ${chalk.dim(title)}`);
       } else {
         log.warn("Commit aborted.");
