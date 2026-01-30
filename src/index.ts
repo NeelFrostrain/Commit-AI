@@ -171,9 +171,9 @@ program.action(async (options) => {
     }
 
     console.log(`\n${chalk.bold.cyan("─── AI SUGGESTION ───")}`);
-    console.log(chalk.white(`REPORT:\n${report}`));
-    console.log(chalk.white(`\nCOMMIT_MESSAGE: ${title}`));
-    console.log(chalk.white(`\nCOMMIT_BODY:\n${commitBody}`));
+    console.log(chalk.green(`REPORT:\n${report}`));
+    console.log(chalk.red(`\nCOMMIT_MESSAGE: ${title}`));
+    // console.log(chalk.white(`\nCOMMIT_BODY:\n${commitBody}`));
     console.log(`${chalk.bold.cyan("─────────────────────")}\n`);
 
     if (options.commit) {
@@ -192,7 +192,7 @@ program.action(async (options) => {
 
       if (shouldCommit) {
         await git.add(".");
-        await git.commit([title, report]);
+        await git.commit([title, commitBody || report]);
         log.success(`Changes committed: ${chalk.dim(title)}`);
       } else {
         log.warn("Commit aborted.");
