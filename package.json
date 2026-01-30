@@ -1,6 +1,6 @@
 {
-  "name": "commit-ai",
-  "version": "1.2.4",
+  "name": "@neelfrostrain/commit-ai",
+  "version": "1.2.5",
   "description": "AI-assisted commit message generator and auto-committer",
   "type": "module",
   "main": "dist/index.js",
@@ -17,8 +17,7 @@
     "prepublishOnly": "npm run build",
     "build-exe": "bun build ./src/index.ts --compile --outfile ./bin/commit-ai.exe",
     "link-cmd": "bun link && bun link commit-ai",
-    "full-build": "bun run build && bun run build-exe && npm link --force",
-    "test": "echo \"No tests specified\" && exit 0"
+    "full-build": "bun run build && bun run build-exe && npm link --force"
   },
   "repository": {
     "type": "git",
