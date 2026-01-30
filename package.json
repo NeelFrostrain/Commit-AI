@@ -4,18 +4,20 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "commit-ai": "dist/index.js",
-    "git-commit-ai": "src/index.ts",
+    "commit-ai": "./dist/index.js",
+    "git-commit-ai": "./src/index.ts",
     "commit-ai-build": "tsc",
-    "git-ai": "bin/commit-ai.exe"
+    "git-ai": "./bin/commit-ai.exe"
   },
   "scripts": {
     "start": "bun run index.ts",
     "build": "tsc",
     "build-exe": "bun build ./src/index.ts --compile --outfile ./bin/commit-ai.exe",
-    "link-cmd": "bun link && bun link commit-ai"
+    "link-cmd": "bun link && bun link commit-ai",
+    "test": "bun run build && bun run build-exe && npm link --force"
   },
   "dependencies": {
+    "chalk": "^5.6.2",
     "commander": "^13.0.0",
     "dotenv": "^17.2.3",
     "groq-sdk": "^0.37.0",

@@ -1,14 +1,12 @@
 #!/usr/bin/env bun
 
-import * as dotenv from "dotenv";
+import "dotenv/config";
 import { Command } from "commander";
 import Groq from "groq-sdk";
 import { simpleGit, type SimpleGit } from "simple-git";
 import * as readline from "node:readline/promises";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-
-dotenv.config();
 
 const program = new Command();
 const git: SimpleGit = simpleGit();
