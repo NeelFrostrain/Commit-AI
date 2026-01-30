@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 
 import "dotenv/config";
-import { Command } from "commander";
-import Groq from "groq-sdk";
-import { simpleGit, type SimpleGit } from "simple-git";
 import * as readline from "node:readline/promises";
+import { Command } from "commander";
+import { simpleGit, type SimpleGit } from "simple-git";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import Groq from "groq-sdk";
 import chalk from "chalk";
 
 const program = new Command();
@@ -54,7 +54,7 @@ async function getIgnorePatterns(): Promise<string[]> {
 program
   .name("commit-ai")
   .description("AI-powered git analysis and auto-committer")
-  .version("1.2.4")
+  .version("1.3.0")
   .option("-c, --commit", "enable commit mode")
   .option("-y, --yes", "skip confirmation prompt");
 
@@ -170,11 +170,11 @@ program.action(async (options) => {
       }
     }
 
-    console.log(`\n${chalk.bold.cyan("─── AI SUGGESTION ───")}`);
-    console.log(chalk.green(`REPORT:\n${report}`));
-    console.log(chalk.red(`\nCOMMIT_MESSAGE: ${title}`));
+    console.log(`\n${chalk.bold.red("─── AI SUGGESTION ───")}`);
+    console.log(chalk.white(`REPORT:\n${report}`));
+    console.log(chalk.white(`\nCOMMIT_MESSAGE: ${title}`));
     // console.log(chalk.white(`\nCOMMIT_BODY:\n${commitBody}`));
-    console.log(`${chalk.bold.cyan("─────────────────────")}\n`);
+    console.log(`${chalk.bold.red("─────────────────────")}\n`);
 
     if (options.commit) {
       let shouldCommit = options.yes;
