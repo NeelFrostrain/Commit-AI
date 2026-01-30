@@ -1,6 +1,6 @@
 {
   "name": "@neelfrostrain/commit-ai",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "AI-assisted commit message generator and auto-committer",
   "type": "module",
   "main": "dist/index.js",
