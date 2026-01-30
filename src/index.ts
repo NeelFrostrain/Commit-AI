@@ -100,6 +100,7 @@ program.action(async (options) => {
       Analyze this Git diff and provide a professional report.
       1. Provide a bulleted "REPORT" of technical changes.
       2. Provide a "COMMIT_MESSAGE" following these strict rules:
+      3. Provide a "COMMIT_MESSAGE" in "type: description" format.
       
       STRICT RULES:
       - Format: type: description
