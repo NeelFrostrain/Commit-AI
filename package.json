@@ -1,20 +1,51 @@
 {
   "name": "commit-ai",
-  "version": "1.1.0",
+  "version": "1.2.4",
+  "description": "AI-assisted commit message generator and auto-committer",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
-    "commit-ai": "./src/index.ts",
-    "git-commit-ai": "./src/index.ts",
-    "commit-ai-build": "tsc",
+    "commit-ai": "./dist/index.js",
+    "git-commit-ai": "./dist/index.js",
     "git-ai": "./bin/commit-ai.exe"
   },
   "scripts": {
     "start": "bun run index.ts",
     "build": "tsc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build",
     "build-exe": "bun build ./src/index.ts --compile --outfile ./bin/commit-ai.exe",
     "link-cmd": "bun link && bun link commit-ai",
-    "full-build": "bun run build && bun run build-exe && npm link --force"
+    "full-build": "bun run build && bun run build-exe && npm link --force",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeelFrostrain/Commit-AI.git"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "llm",
+    "groq",
+    "cli",
+    "committer"
+  ],
+  "author": "Neel Frostrain",
+  "license": "MIT",
+  "files": [
+    "dist",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "commander": "^13.0.0",
@@ -24,11 +55,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "^22.0.0"
-  },
-  "module": "index.ts",
-  "private": true,
-  "peerDependencies": {
+    "@types/node": "^22.0.0",
     "typescript": "^5"
   }
 }
