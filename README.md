@@ -2,62 +2,256 @@
 
 <div align="center">
 
-**Professionalize your Git history with AI-generated Conventional Commits.**
+[![Version](https://img.shields.io/badge/version-1.2.4-blue?style=flat-square)](https://github.com/NeelFrostrain/Commit-AI)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen?style=flat-square)](https://nodejs.org)
+[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.0-blue?style=flat-square)](https://www.typescriptlang.org)
 
-Stop writing "fixed stuff" and start writing commits that tell a story.
-
-**[Quick Start](https://www.google.com/search?q=%23-quick-start)** • **[About](https://www.google.com/search?q=%23-about-commit-ai)** • **[Configuration](https://www.google.com/search?q=%23-configuration)** • **[Usage](https://www.google.com/search?q=%23-usage)**
+**Professionalize your Git history with AI-generated Conventional Commits**
 
 </div>
 
 ---
 
-## 📖 About Commit-AI
+## 📋 Table of contents
 
-**Commit-AI** was born out of a common developer frustration: the "Lazy Commit" syndrome. We've all written messages like `fixed bug`, `update index.ts`, or the dreaded `..........`.
-
-This tool transforms raw, technical code changes into **human-readable, professional documentation**. By leveraging the **Llama 3.1 8B** model via Groq's ultra-fast inference engine, Commit-AI acts as a bridge between your terminal and your project's history.
-
-### 🧠 The Logic
-
-The tool doesn't just look at filenames; it reads the **Git Diff**. It understands:
-
-- **Intent:** Are you adding a feature or fixing a regression?
-- **Impact:** What specific logic changed within the functions?
-- **Context:** It filters out noise like `package-lock.json` or `node_modules` to focus on your actual contributions.
-
-### 🏗️ Built With
-
-- **[Bun](https://www.google.com/search?q=https://bun.sh/):** High-performance runtime and bundler.
-- **[Groq SDK](https://www.google.com/search?q=https://groq.com/):** Lightning-fast AI inference.
-- **[Commander.js](https://www.google.com/search?q=https://github.com/tj/commander.js/):** CLI interface and flag management.
-- **[Simple-Git](https://www.google.com/search?q=https://github.com/steveukx/git-js):** Local Git interaction layer.
-- **[Chalk](https://www.google.com/search?q=https://github.com/chalk/chalk):** Beautiful, colored terminal logs.
+- [Overview](#-overview)
+- [Quick start](#-quick-start)
+- [Features](#-features)
+- [Installation](#-installation)
+- [Configuration (.env)](#-configuration-env)
+- [CLI usage & examples](#-cli-usage--examples)
+- [Prompt & parsing details](#-prompt--parsing-details)
+- [Advanced configuration](#-advanced-configuration)
+- [Testing & CI](#-testing--ci)
+- [Publishing to npm](#-publishing-to-npm)
+- [Troubleshooting](#-troubleshooting)
+- [Security & privacy](#-security--privacy)
+- [Contributing & docs](#-contributing--docs)
+- [License & author](#-license--author)
 
 ---
 
-## ⚡ Quick Start
+## 🎯 Overview
 
-### 1️⃣ Installation
+Commit-AI reads your staged changes (via `git diff`), sends a focused prompt to a chat model (Groq/Llama), and returns three structured outputs: **REPORT**, **COMMIT_MESSAGE**, and **COMMIT_BODY**. It sanitizes the output and optionally commits using `simple-git`.
 
-Install the tool globally using npm:
+Use it to consistently produce clear, conventional commit messages across your repo.
+
+---
+
+## ⚡ Quick start
+
+1. Install dependencies
 
 ```bash
-npm i @neelfrostrain/commit-ai -g
-
+bun install
+# or
+npm install
 ```
 
-### 2️⃣ Get your API Key
+2. Create a `.env` file (see configuration)
 
-1. Visit [Groq Cloud Console](https://www.google.com/search?q=https://console.groq.com/keys).
-2. Create a new API Key and copy it.
+3. Try a dry run
 
-### 3️⃣ Configure Environment (Windows)
+```bash
+bun .
+```
 
-To use Commit-AI, you must set your `GROQ_API_KEY` as an environment variable. Choose your preferred terminal below:
+4. Commit interactively
 
-#### **Option A: Command Prompt (CMD)**
+```bash
+bun . -c
+# confirm with 'y' to commit
+```
 
+5. Auto-commit (no prompt)
+
+```bash
+bun . -c -y
+```
+
+---
+
+## ✨ Features
+
+- Generates `COMMIT_MESSAGE` in `type: description` format (conventional commits)
+- Provides a concise `COMMIT_BODY` (1–3 sentences) and a bulleted `REPORT`
+- Sanitizes AI output (removes Markdown, normalizes bullets)
+- Safe fallbacks for malformed responses
+- Uses `simple-git` for staging and committing with a title + body
+
+---
+
+## 🧩 Installation
+
+- Local development: `bun install` (or `npm install`)
+- Build for release: `npm run build` (emits `dist/`)
+- Development link (global CLI):
+
+```bash
+bun link && bun link commit-ai
+# or after build
+npm install -g .
+```
+
+---
+
+## ⚙️ Configuration (.env)
+
+Create a `.env` at the project root:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Platform examples:
+
+- PowerShell (session):
+
+```powershell
+$env:GROQ_API_KEY = "your_key_here"
+```
+
+- macOS / Linux / Git Bash:
+
+```bash
+export GROQ_API_KEY=your_key_here
+```
+
+> Tip: add `.env` to `.gitignore` and keep `.env.example` as a template.
+
+---
+
+## 💻 CLI usage & examples
+
+- Dry run (preview only):
+
+```bash
+bun .
+```
+
+- Interactive commit (prompt):
+
+```bash
+bun . -c
+```
+
+- Auto-confirm and commit:
+
+```bash
+bun . -c -y
+```
+
+Sample output (what you'll see):
+
+```
+─── AI SUGGESTION ───
+REPORT:
+- Fix markdown parsing in AI responses
+- Add commit body generation
+
+COMMIT_MESSAGE: feat: improve commit generation
+COMMIT_BODY:
+Improve parsing of AI responses to avoid artifacts and add brief context.
+─────────────────────
+Use this commit message? (y/n):
+```
+
+---
+
+## 🔍 Prompt & parsing details
+
+- The model is asked to return **REPORT**, **COMMIT_MESSAGE** (single line), and **COMMIT_BODY** (1–3 sentences).
+- We truncate the diff to `MAX_CHAR` (default 5000) to limit token usage.
+- Parsing uses regex and sanitization steps to ensure stable output.
+- If the title is malformed, fallback is used: `chore: update project files`.
+
+---
+
+## ⚙️ Advanced configuration
+
+- Edit `MAX_CHAR` in `src/index.ts` to increase/decrease diff size.
+- Modify the `prompt` template in `src/index.ts` to change the model's output style.
+- To include more detail in `COMMIT_BODY`, request it explicitly in the prompt.
+
+---
+
+## 🧪 Testing & CI (suggested)
+
+- Add unit tests for parsing (`REPORT`, `COMMIT_MESSAGE`, `COMMIT_BODY`) using fixtures
+- Example GitHub Actions workflow:
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+```
+
+I can scaffold tests + workflow if you'd like.
+
+---
+
+## 📦 Publishing to npm
+
+Checklist before publishing:
+
+- `npm run build` (verify `dist/` contains `index.js`)
+- Ensure `package.json` `name` & `version` are correct
+- `npm whoami` → confirm authentication
+- `npm publish --access public` (if using a scoped public package)
+
+Common issues:
+
+- `401/404` → token expired or not logged in (run `npm login`)
+- Name conflicts → choose a different package name or scope
+
+---
+
+## ⚠️ Troubleshooting
+
+- **Missing API key:** set `GROQ_API_KEY` or use `.env`
+- **Commit errors:** check `git status`, hooks, and permissions
+- **AI output looks wrong:** tweak the prompt or check the truncated diff
+
+---
+
+## 🔒 Security & privacy
+
+- Diffs (not your entire repo) are sent to Groq. Do not include secrets in staged diffs.
+- Use `.gitignore` or `getIgnorePatterns()` to exclude sensitive paths.
+
+---
+
+## 🤝 Contributing & docs
+
+- `CONTRIBUTING.md`, `SECURITY.md`, and `CODE_OF_CONDUCT.md` are included; please follow them.
+- Open issues or PRs for improvements and test additions.
+
+---
+
+## 📝 License & author
+
+MIT © Neel Frostrain — see `LICENSE` for full text.
+
+---
+
+If you'd like, I can also:
+
+- Add a `CHANGELOG.md`, unit tests for parsing, and a GitHub Actions workflow ✅
+- Add `docs/` with example AI responses and expected parser outputs ✅
+
+Tell me which extras you want next and I'll add them.
 Run this command (replace `your_key_here` with your actual key):
 
 ```cmd
