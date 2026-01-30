@@ -57,7 +57,7 @@ async function getIgnorePatterns(): Promise<string[]> {
 program
   .name("commit-ai")
   .description("AI-powered git analysis and auto-committer")
-  .version("1.3.1", "-v, --version")
+  .version("1.3.2", "-v, --version")
   .option("-c, --commit", "enable commit mode")
   .option("-y, --yes", "skip confirmation prompt");
 
