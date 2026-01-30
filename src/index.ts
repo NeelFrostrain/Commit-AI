@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 import "dotenv/config";
 import { Command } from "commander";
 import Groq from "groq-sdk";
@@ -40,13 +41,13 @@ async function getIgnorePatterns(): Promise<string[]> {
     const content = await readFile(gitignorePath, "utf-8");
     const gitignoreLines = content
       .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter((line) => line && !line.startsWith("#"));
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith("#"));
     return Array.from(new Set([...defaultExcludes, ...gitignoreLines])).map(
-      (pattern) => `:(exclude)${pattern}`,
+      (p) => `:(exclude)${p}`,
     );
-  } catch (e) {
-    return defaultExcludes.map((pattern) => `:(exclude)${pattern}`);
+  } catch {
+    return defaultExcludes.map((p) => `:(exclude)${p}`);
   }
 }
 
@@ -77,10 +78,10 @@ program.action(async (options) => {
     await git.add(["--intent-to-add", "."]);
 
     const excludePatterns = await getIgnorePatterns();
-    let diff: string = "";
+    let diff = "";
     try {
       diff = await git.diff(["HEAD", "--", ".", ...excludePatterns]);
-    } catch (e) {
+    } catch {
       const EMPTY_TREE_HASH = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
       diff = await git.diff([EMPTY_TREE_HASH, "--", ".", ...excludePatterns]);
     }
@@ -90,26 +91,18 @@ program.action(async (options) => {
       return;
     }
 
-    const MAX_CHAR = 5000;
-    if (diff.length > MAX_CHAR) {
-      diff = diff.substring(0, MAX_CHAR) + "\n\n...[TRUNCATED]...";
-    }
-
     const prompt = `
-      Analyze this Git diff and provide a professional report.
+      Analyze this Git diff.
       1. Provide a bulleted "REPORT" of technical changes.
-      2. Provide a "COMMIT_MESSAGE" following these strict rules:
-      3. Provide a "COMMIT_MESSAGE" in "type: description" format.
-      
+      2. Provide a "COMMIT_MESSAGE" in "type: description" format.
+
       STRICT RULES:
-      - Format: type: description
-      - NO BRACKETS (e.g., use "feat: message" NOT "[feat]: message")
-      - NO SCOPES (e.g., use "feat: message" NOT "feat(scope): message")
+      - Format: type: description (NO brackets, NO scopes).
       - Use imperative mood.
       - No period at the end.
 
       Diff:
-      ${diff}
+      ${diff.substring(0, 5000)}
     `;
 
     log.ai("Generating commit suggestion...");
@@ -118,30 +111,31 @@ program.action(async (options) => {
       messages: [
         {
           role: "system",
-          content: "You are commit-ai, a professional Git assistant.",
+          content: "You are commit-ai. Return only REPORT and COMMIT_MESSAGE.",
         },
         { role: "user", content: prompt },
       ],
       model: "llama-3.1-8b-instant",
-      temperature: 0.2,
+      temperature: 0.1,
     });
 
     const response = chatCompletion.choices[0]?.message?.content || "";
 
-    // Improved parsing to handle Markdown bolding and headers
-    const reportPart =
+    // 1. Extract Report and clean up double "REPORT" headers and Markdown
+    let cleanedReport =
       response
         .split(/COMMIT_MESSAGE/i)[0]
-        ?.replace(/REPORT:|\*\*/g, "")
-        .trim() || "";
+        ?.replace(/REPORT:?/gi, "")
+        .replace(/\*\*/g, "")
+        .replace(/^\s*[-*]\s*/gm, "- ")
+        .trim() || "Code updates.";
 
+    // 2. Extract Title and clean up Markdown/brackets
     let titlePart =
       response
         .split(/COMMIT_MESSAGE:?/i)[1]
         ?.trim()
         .split("\n")[0] || "";
-
-    // CLEANING: Strip AI formatting and force "type: description"
     titlePart = titlePart
       .replace(/\*\*/g, "")
       .replace(/^\[(\w+)\]:?\s*/, "$1: ")
@@ -149,62 +143,38 @@ program.action(async (options) => {
       .replace(/\.$/, "")
       .trim();
 
+    // 3. Final Validation of "type: description"
+    const finalTitle = titlePart.includes(":")
+      ? titlePart
+      : `feat: ${titlePart || "update project files"}`;
+
     console.log(`\n${chalk.bold.cyan("─── AI SUGGESTION ───")}`);
-
-    // Sanitize and format the AI response for display and commit usage
-    const cleanedReport = (reportPart || "Internal code updates")
-      .replace(/\*\*/g, "") // remove bold markers
-      .replace(/^\s*[-*]\s*/gm, "- ") // normalize bullet points
-      .replace(/\r/g, "")
-      .trim();
-
-    // Ensure the title follows `type: description` strictly
-    const titleMatch = (titlePart || "").trim().match(/^([A-Za-z]+):\s*(.+)$/);
-    if (titleMatch && titleMatch[1] && titleMatch[2]) {
-      // lower-case type, keep description as-is
-      const type = titleMatch[1].toLowerCase();
-      const desc = titleMatch[2].trim();
-      titlePart = `${type}: ${desc}`;
-    } else {
-      // fallback to a safe default
-      titlePart = "chore: update project files";
-    }
-
-    console.log(chalk.white(`REPORT:\n${cleanedReport}\n`));
-    console.log(chalk.white(`COMMIT_MESSAGE: ${titlePart}`));
+    console.log(chalk.white(`REPORT:\n${cleanedReport}`));
+    console.log(chalk.white(`\nCOMMIT_MESSAGE: ${finalTitle}`));
     console.log(`${chalk.bold.cyan("─────────────────────")}\n`);
 
-    if (options.commit && titlePart) {
-      let shouldCommit = false;
-
-      if (options.yes) {
-        shouldCommit = true;
-      } else {
+    if (options.commit) {
+      let shouldCommit = options.yes;
+      if (!options.yes) {
         const rl = readline.createInterface({
           input: process.stdin,
           output: process.stdout,
         });
-
         const confirm = await rl.question(
           `${origin} ${chalk.yellow("[Prompt]")}: Use this commit message? (y/n): `,
         );
-
         if (confirm.toLowerCase() === "y") shouldCommit = true;
         rl.close();
       }
 
       if (shouldCommit) {
         await git.add(".");
-        try {
-          await git.commit([titlePart, reportPart]);
-          log.success(`Changes committed: ${chalk.dim(titlePart)}`);
-        } catch (commitErr: any) {
-          log.error(`Git Commit Failed: ${commitErr.message}`);
-        }
+        await git.commit([finalTitle, cleanedReport]);
+        log.success(`Changes committed: ${chalk.dim(finalTitle)}`);
       } else {
         log.warn("Commit aborted.");
       }
-    } else if (!options.commit) {
+    } else {
       log.info("Run with '-c' to perform the actual commit.");
     }
   } catch (error: any) {
@@ -212,7 +182,6 @@ program.action(async (options) => {
   }
 });
 
-// Use parseAsync and wrap in a top-level async function to ensure process stays alive
 async function main() {
   await program.parseAsync(process.argv);
 }
