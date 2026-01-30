@@ -95,10 +95,25 @@ program.action(async (options) => {
       return;
     }
 
-    const MAX_CHAR = 6000;
+    const MAX_CHAR = 5000;
     if (diff.length > MAX_CHAR) {
       diff = diff.substring(0, MAX_CHAR) + "\n\n...[TRUNCATED]...";
     }
+
+    const prompt = `
+      Analyze this Git diff.
+      1. Provide a bulleted "REPORT" of changes.
+      2. Provide a "COMMIT_MESSAGE" in "type: description" format.
+      
+      STRICT RULES:
+      - Format: type: description (e.g., feat: add login)
+      - DO NOT use brackets around the type.
+      - Use imperative mood.
+      - No period at the end.
+
+      Diff:
+      ${diff}
+    `;
 
     log.ai("Generating commit suggestion...");
 
@@ -106,50 +121,37 @@ program.action(async (options) => {
       messages: [
         {
           role: "system",
-          content:
-            "You are a Git assistant. Respond ONLY with a raw JSON object. Keep the report brief.",
+          content: "You are a professional Git workflow assistant.",
         },
-        {
-          role: "user",
-          content: `Analyze this diff and return JSON:
-          {
-            "report": "bulleted summary",
-            "title": "type: description"
-          }
-          
-          Diff:
-          ${diff}`,
-        },
+        { role: "user", content: prompt },
       ],
       model: "llama-3.1-8b-instant",
-      temperature: 0.1,
-      max_tokens: 1024, // Increased to prevent the 'cut-off' error
-      response_format: { type: "json_object" },
+      temperature: 0.2,
     });
 
-    const rawContent = chatCompletion.choices[0]?.message?.content || "{}";
-    const parsed = JSON.parse(rawContent);
+    const response = chatCompletion.choices[0]?.message?.content || "";
+    const reportPart =
+      response
+        .split(/COMMIT_MESSAGE:/i)[0]
+        ?.replace(/REPORT:/i, "")
+        .trim() || "";
+    let titlePart = response.split(/COMMIT_MESSAGE:/i)[1]?.trim() || "";
 
-    const reportPart = parsed.report || "No report generated.";
-    let titlePart = parsed.title || "";
-
-    // Final clean-up of title (removes brackets just in case)
+    /**
+     * CLEANING LOGIC:
+     * 1. Remove brackets if AI included them: [feat] -> feat
+     * 2. Ensure it follows type: description
+     */
     titlePart = titlePart
-      .replace(/^\[(\w+)\]:?/, "$1:")
-      .replace(/\.$/, "")
-      .trim();
+      .replace(/^\[(\w+)\]:/, "$1:") // Converts [feat]: to feat:
+      .replace(/^\[(\w+)\]/, "$1:") // Converts [feat] to feat:
+      .replace(/\.$/, ""); // Removes trailing period
 
     console.log(`\n${chalk.bold.cyan("─── AI SUGGESTION ───")}`);
-    console.log(chalk.white(`REPORT:\n${reportPart}\n`));
-    console.log(chalk.white(`COMMIT_MESSAGE: ${titlePart}`));
+    console.log(chalk.white(response));
     console.log(`${chalk.bold.cyan("─────────────────────")}\n`);
 
-    if (options.commit) {
-      if (!titlePart) {
-        log.error("AI failed to suggest a valid commit message.");
-        return;
-      }
-
+    if (options.commit && titlePart) {
       let shouldCommit = false;
       if (options.yes) {
         shouldCommit = true;
@@ -162,13 +164,16 @@ program.action(async (options) => {
 
       if (shouldCommit) {
         await git.add(".");
-        await git.commit([titlePart, reportPart]);
-        log.success(`Changes committed: ${chalk.green(titlePart)}`);
+        try {
+          await git.commit([titlePart, reportPart]);
+          log.success(`Changes committed: ${chalk.dim(titlePart)}`);
+        } catch (commitErr: any) {
+          // Handle commit-specific failures without treating them as critical for the whole run
+          log.error(`Git Commit Failed: ${commitErr.message}`);
+        }
       } else {
         log.warn("Commit aborted.");
       }
-    } else {
-      log.info(`Run with ${chalk.bold("-c")} to commit changes.`);
     }
   } catch (error: any) {
     log.error(`Critical Failure: ${error.message}`);
@@ -177,9 +182,10 @@ program.action(async (options) => {
   }
 });
 
-// Use parseAsync for proper async handling in Bun/Commander
+// Replace program.parse(process.argv); with this:
 async function run() {
   await program.parseAsync(process.argv);
 }
 
 run();
+// program.parse(process.argv);
