@@ -72,7 +72,7 @@ program.action(async (options) => {
       return;
     }
 
-    console.log("🔍 commit-ai is scanning your changes...");
+    console.log("🔍 [Commit-AI] is scanning your changes...");
     await git.add(["--intent-to-add", "."]);
 
     // Dynamically fetch ignore patterns
