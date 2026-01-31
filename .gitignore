@@ -1,35 +1,36 @@
-# dependencies (bun install)
-node_modules
-
-# output
-out
-dist
-*.tgz
-
-# code coverage
-coverage
-*.lcov
-
-# logs
-logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
-
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
-
-# caches
-.eslintcache
-.cache
-*.tsbuildinfo
-
-# IntelliJ based IDEs
-.idea
-
-# Finder (MacOS) folder config
-.DS_Store
+# Binary builds
+# Overrides common naming conventions for Go binaries
 bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Specific binary name (Replace 'mycli' with your project name)
+mycli
+
+# Dependency directories (only needed if you use 'go mod vendor')
+vendor/
+
+# Test coverage files
+*.out
+*.test
+*.prof
+
+# IDE/Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Optional: Cobra/CLI specific local config
+# If your CLI generates local config files during testing (e.g., .mycli.yaml)
+.cobra.yaml
+.mycli.yaml
+
+.env
