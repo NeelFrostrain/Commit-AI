@@ -1,12 +1,11 @@
 # Commit-AI 🤖
 
-<div>
+<div align="left">
 
 **Professionalize your Git history with AI-generated Conventional Commits.**
 
-[![Version](https://img.shields.io/badge/version-1.3.2-magenta?style=flat-square)](https://github.com/NeelFrostrain/commit-ai)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-%3E%3D5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Version](https://img.shields.io/badge/version-1.1.0-red?style=flat-square)](https://github.com/NeelFrostrain/Commit-Ai-Go)
+[![Go](https://img.shields.io/badge/go-%3E%3D1.25.6-00ADD8?style=flat-square&logo=go&logoColor=white)](https://golang.org)
 [![Groq](https://img.shields.io/badge/Groq-AI-cyan?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
@@ -18,25 +17,15 @@ Stop writing "fixed stuff" and start writing commits that tell a story.
 
 ## 📖 About Commit-AI
 
-**Commit-AI** was born out of a common developer frustration: the "Lazy Commit" syndrome. We've all written messages like `fixed bug`, `update index.ts`, or the dreaded `..........`.
-
-This tool transforms raw, technical code changes into **human-readable, professional documentation**. By leveraging the **Llama 3.1 8B** model via Groq's ultra-fast inference engine, Commit-AI acts as a bridge between your terminal and your project's history.
+**Commit-AI** transforms raw, technical code changes into **human-readable, professional documentation**. By leveraging Groq's inference engine (Llama 3.1 8B), it acts as a bridge between your terminal and your project's history.
 
 ### 🧠 The Logic
 
-The tool doesn't just look at filenames; it reads the **Git Diff**. It understands:
+The tool reads your **Git Diff** to understand:
 
-- **Intent:** Are you adding a feature or fixing a regression?
+- **Intent:** Adding a feature or fixing a regression?
 - **Impact:** What specific logic changed within the functions?
-- **Context:** It filters out noise like `package-lock.json` or `node_modules` to focus on your actual contributions.
-
-### 🏗️ Built With
-
-- **[Bun](https://www.google.com/search?q=https://bun.sh/):** High-performance runtime and bundler.
-- **[Groq SDK](https://www.google.com/search?q=https://groq.com/):** Lightning-fast AI inference.
-- **[Commander.js](https://www.google.com/search?q=https://github.com/tj/commander.js/):** CLI interface and flag management.
-- **[Simple-Git](https://www.google.com/search?q=https://github.com/steveukx/git-js):** Local Git interaction layer.
-- **[Chalk](https://www.google.com/search?q=https://github.com/chalk/chalk):** Beautiful, colored terminal logs.
+- **Context:** Automatically filters out noise like `package-lock.json` or `node_modules`.
 
 ---
 
@@ -44,53 +33,37 @@ The tool doesn't just look at filenames; it reads the **Git Diff**. It understan
 
 ### 1️⃣ Installation
 
-Install the tool globally using npm:
+**For Go Users:**
 
 ```bash
-npm i @neelfrostrain/commit-ai -g
+go install github.com/NeelFrostrain/Commit-Ai-Go@latest
 
 ```
 
-### 2️⃣ Get your API Key
+**For Windows (Non-Go Users):**
 
-1. Visit [Groq Cloud Console](https://www.google.com/search?q=https://console.groq.com/keys).
-2. Create a new API Key and copy it.
+1. Download the latest `commit-ai-installer.exe` from [Releases](https://github.com/NeelFrostrain/Commit-Ai-Go/releases/latest/).
+2. Run the installer. It will automatically move the binary to your `AppData` and update your `PATH`.
 
-### 3️⃣ Configure Environment (Windows)
+### 2️⃣ Configuration (One-Time Setup)
 
-To use Commit-AI, you must set your `GROQ_API_KEY` as an environment variable. Choose your preferred terminal below:
+You don't need to manually create `.env` files.
 
-#### **Option A: Command Prompt (CMD)**
-
-Run this command (replace `your_key_here` with your actual key):
-
-```cmd
-setx GROQ_API_KEY "your_key_here"
-
-```
-
-#### **Option B: PowerShell**
-
-Run this command:
-
-```powershell
-[System.Environment]::SetEnvironmentVariable('GROQ_API_KEY', 'your_key_here', 'User')
-
-```
-
-> **⚠️ Important:** You **must restart** your terminal (CMD, PowerShell, or VS Code) after running these commands for the changes to take effect.
+1. Visit [Groq Console](https://console.groq.com/keys) to get your key.
+2. Run `commit-ai` in any terminal.
+3. Paste your key when prompted. **Commit-AI** will save it to `~/.commit-ai-key` and your System Registry for global access.
 
 ---
 
 ## ✨ Features
 
-| Feature                   | Description                                                      |
-| ------------------------- | ---------------------------------------------------------------- |
-| **🧠 Deep Diff Analysis** | Understands code logic, not just file metadata.                  |
-| **📝 Conventional Style** | Strictly follows the `type: description` standard.               |
-| **📊 Technical Reports**  | Generates a detailed bulleted summary for the commit body.       |
-| **🛡️ Smart Filtering**    | Respects `.gitignore` and ignores heavy lockfiles automatically. |
-| **🚀 Sub-second Speed**   | Powered by Groq for nearly instant commit generation.            |
+| Feature                   | Description                                                |
+| ------------------------- | ---------------------------------------------------------- |
+| **🧠 Deep Diff Analysis** | Understands code logic, not just file metadata.            |
+| **📝 Conventional Style** | Strictly follows the `type: description` standard.         |
+| **📊 Technical Reports**  | Generates a detailed bulleted summary for the commit body. |
+| **🛡️ Global Config**      | Set your API key once, use it in any project folder.       |
+| **🚀 Fast**               | Powered by Groq/Llama-3.1 for near-instant results.        |
 
 ---
 
@@ -102,51 +75,31 @@ Run this command:
 | ----------- | ----- | ------------------------------------------------------- |
 | `--commit`  | `-c`  | Performs the `git commit` after generating the message. |
 | `--yes`     | `-y`  | Skips the confirmation prompt (Auto-pilot).             |
-| `--version` | `-v`  | Displays the current version.                           |
-| `--help`    | `-h`  | Displays the help menu.                                 |
+| `--version` | `-v`  | Displays version information.                           |
 
 ### Example Workflow
 
-1. **Stage your changes:**
-
-```bash
-git add .
-
-```
-
-2. **Run Commit-AI:**
-
-```bash
-commit-ai -c
-
-```
-
-3. **Review & Confirm:** The AI will show you a report and the suggested message. Type `y` to finalize!
+1. **Stage changes:** `git add .`
+2. **Review AI suggestion:** `commit-ai`
+3. **Commit with AI:** `commit-ai -c`
 
 ---
 
-## ⚙️ Standards & Security
+## ⚙️ Standards & Privacy
 
-### Conventional Commit Types
+### Conventional Categories
 
-Commit-AI automatically categorizes your work into:
-
-- `feat`: New features
-- `fix`: Bug fixes
-- `docs`: Documentation updates
-- `style`: Formatting/Linting
-- `refactor`: Code restructuring
-- `chore`: Build tasks/dependencies
+`feat`, `fix`, `docs`, `style`, `refactor`, `chore`.
 
 ### 🛡️ Privacy
 
-- **Local Keys:** Your API key stays on your machine and is never shared.
-- **Diffs Only:** Only the `git diff` of your **staged** files is sent to the AI for processing. No other system data is accessed.
+- **Local Keys:** Your API key is stored locally on your machine.
+- **Diffs Only:** Only the code diff of your **staged** files is sent to the AI.
 
 ---
 
 ## 📄 License
 
-MIT © [Neel Frostrain](https://www.google.com/search?q=https://github.com/NeelFrostrain)
+MIT © [Neel Frostrain](https://github.com/NeelFrostrain)
 
 ---
