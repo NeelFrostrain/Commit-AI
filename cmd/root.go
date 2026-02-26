@@ -46,77 +46,96 @@ func runCommitAI(cmd *cobra.Command, args []string) {
 	_ = godotenv.Load()
 	apiKey := getAPIKey()
 
-	// 1. Git Staging Check
+	// 1. Smart Staging Check
 	staged, _ := exec.Command("git", "diff", "--cached", "--name-only").Output()
 	if len(strings.TrimSpace(string(staged))) == 0 {
-		fmt.Printf("%s No staged changes. Stage all? (y/n): ", yellow("[?]"))
 		var confirm bool
-		survey.AskOne(&survey.Confirm{Message: "Stage all files?"}, &confirm)
-		if confirm {
-			exec.Command("git", "add", ".").Run()
-		} else {
-			return
-		}
+		fmt.Printf("%s No staged changes detected.\n", yellow("[!]"))
+		survey.AskOne(&survey.Confirm{Message: "Stage all files and continue?"}, &confirm)
+		if !confirm { return }
+		exec.Command("git", "add", ".").Run()
 	}
 
-	fmt.Printf("%s %s: Analyzing changes...\n", magenta("[Commit-AI]"), blue("[Info]"))
-
-	// 2. Diff Extraction (Limit to 10k chars for context)
+	// 2. Diff Optimization
+	// We only send the summary + the diff to give the AI context of what was ADDED vs DELETED
 	exclude := git.GetIgnorePatterns()
-	diffArgs := append([]string{"diff", "--cached", "--"}, exclude...)
+	diffArgs := append([]string{"diff", "--cached", "--stat", "--"}, exclude...)
+	stats, _ := exec.Command("git", diffArgs...).Output()
+	
+	// Get actual code changes
+	diffArgs = append([]string{"diff", "--cached", "-U2", "--"}, exclude...) // Lower context lines to save tokens
 	out, _ := exec.Command("git", diffArgs...).Output()
-	diffText := string(out)
-	if len(diffText) > 10000 {
-		diffText = diffText[:10000] + "\n...[truncated]"
+	
+	fullContext := fmt.Sprintf("Summary:\n%s\n\nDiff:\n%s", stats, out)
+	if len(fullContext) > 12000 {
+		fullContext = fullContext[:12000] + "\n...[diff truncated]"
 	}
 
-	// 3. AI Request
+	// 3. AI Request with "Thinking" indicator
+	fmt.Printf("%s %s: Brainstorming commit options...", magenta("[Commit-AI]"), blue("[Info]"))
+	
 	client := groq.NewClient(apiKey)
-	temp := 0.3
+	temp := 0.5 // Slightly higher for better creativity in options
 	resp, err := client.CreateChatCompletion(context.Background(), groq.ChatCompletionRequest{
 		Model: "llama-3.1-8b-instant",
 		Messages: []groq.ChatMessage{
 			{
 				Role: groq.RoleSystem,
-				Content: `You are a senior engineer. Provide 3 semantic commit options in <options> tags and a CONCISE summary in <report> tags.
-				Use types: feat, fix, refactor, chore, docs, style, perf.`,
+				Content: `You are a Principal Engineer. Analyze the diff and provide 3 distinct semantic titles in <options> and a concise technical report in <report>.
+				If files were deleted, use 'refactor' or 'chore'. If new files, use 'feat'.`,
 			},
-			{Role: groq.RoleUser, Content: ai.BuildPrompt(diffText)},
+			{Role: groq.RoleUser, Content: ai.BuildPrompt(fullContext)},
 		},
 		Temperature: &temp,
 	})
+	fmt.Print("\r") // Clear the "Analyzing" line
 
 	if err != nil {
 		fmt.Printf("%s AI Error: %v\n", red("[Error]"), err)
 		return
 	}
 
-	// 4. Interaction Logic
-	options, report := ai.ParseMultiResponse(resp.Choices[0].Message.Content)
-	
-	var selected string
-	prompt := &survey.Select{
-		Message: "Select a commit message:",
-		Options: append(options, "Enter manually...", "Cancel"),
-	}
-	survey.AskOne(prompt, &selected)
+	// 4. Interactive Selection (Title)
+	options, aiReport := ai.ParseMultiResponse(resp.Choices[0].Message.Content)
+	var selectedTitle string
+	survey.AskOne(&survey.Select{
+		Message: "Pick a Title:",
+		Options: append(options, "Edit manually...", "Cancel"),
+	}, &selectedTitle)
 
-	if selected == "Cancel" || selected == "" {
-		return
-	}
-
-	if selected == "Enter manually..." {
-		survey.AskOne(&survey.Input{Message: "Custom message:"}, &selected)
+	if selectedTitle == "Cancel" { return }
+	if selectedTitle == "Edit manually..." {
+		survey.AskOne(&survey.Input{Message: "Custom Title:", Default: options[0]}, &selectedTitle)
 	}
 
-	// 5. Finalize
-	fmt.Printf("\n%s\nREPORT:\n%s\n%s\n", magenta("─── DETAILS ───"), report, magenta("───────────────"))
+	// 5. Interactive Selection (Report)
+	var selectedReport string
+	reportChoices := []string{"Keep AI Report", "Edit Report", "No Report"}
+	var reportAction string
+	survey.AskOne(&survey.Select{Message: "Commit Details:", Options: reportChoices}, &reportAction)
 
+	switch reportAction {
+	case "Keep AI Report":
+		selectedReport = aiReport
+	case "Edit Report":
+		survey.AskOne(&survey.Multiline{Message: "Edit Body:", Default: aiReport}, &selectedReport)
+	case "No Report":
+		selectedReport = ""
+	}
+
+	// 6. Execution
 	if commitFlag {
-		if yesFlag || askConfirm("Commit with this message?") {
-			commitCmd := exec.Command("git", "commit", "-m", selected, "-m", report)
-			commitCmd.Stdout, commitCmd.Stderr = os.Stdout, os.Stderr
-			commitCmd.Run()
+		fmt.Printf("\n%s\n%s %s\n%s %s\n", magenta("─── FINAL ───"), blue("TITLE:"), selectedTitle, blue("BODY:"), selectedReport)
+		if yesFlag || askConfirm("Execute git commit?") {
+			args := []string{"commit", "-m", selectedTitle}
+			if selectedReport != "" {
+				args = append(args, "-m", selectedReport)
+			}
+			cmd := exec.Command("git", args...)
+			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
+			if err := cmd.Run(); err == nil {
+				fmt.Println(color.GreenString("✔ Commit created!"))
+			}
 		}
 	}
 }

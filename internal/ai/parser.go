@@ -72,46 +72,35 @@ func ParseResponse(response string) (string, string) {
 }
 
 func ParseMultiResponse(input string) ([]string, string) {
-	// 1. Extract the Report
-	report := ""
-	reportStart := strings.Index(input, "<report>")
-	reportEnd := strings.Index(input, "</report>")
-	if reportStart != -1 && reportEnd != -1 {
-		report = strings.TrimSpace(input[reportStart+8 : reportEnd])
+	report := "Changes analyzed."
+	if start, end := strings.Index(input, "<report>"), strings.Index(input, "</report>"); start != -1 && end > start {
+		report = strings.TrimSpace(input[start+8 : end])
 	}
 
-	// 2. Extract Options
-	options := []string{}
-	optsStart := strings.Index(input, "<options>")
-	optsEnd := strings.Index(input, "</options>")
-	
-	if optsStart != -1 && optsEnd != -1 {
-		rawOptions := strings.TrimSpace(input[optsStart+9 : optsEnd])
-		lines := strings.Split(rawOptions, "\n")
-		for _, line := range lines {
-			// Remove numbering like "1. ", "2. ", etc.
-			cleanLine := line
-			if len(line) > 3 && (line[1] == '.' || line[2] == '.') {
-				parts := strings.SplitN(line, " ", 2)
-				if len(parts) > 1 {
-					cleanLine = parts[1]
-				}
+	var options []string
+	if start, end := strings.Index(input, "<options>"), strings.Index(input, "</options>"); start != -1 && end > start {
+		raw := strings.TrimSpace(input[start+9 : end])
+		for _, line := range strings.Split(raw, "\n") {
+			clean := strings.TrimSpace(line)
+			if clean == "" { continue }
+
+			// Smart Cleaning: Remove list numbers, quotes, and asterisks
+			clean = strings.Map(func(r rune) rune {
+				if r == '*' || r == '"' || r == '`' { return -1 }
+				return r
+			}, clean)
+			
+			// Remove leading "1. " or "2. "
+			if idx := strings.Index(clean, ". "); idx != -1 && idx < 4 {
+				clean = clean[idx+2:]
 			}
-			
-			// Clean up "type: " prefix if AI adds it literally
-			cleanLine = strings.TrimPrefix(cleanLine, "type: ")
-			cleanLine = strings.TrimSpace(cleanLine)
-			
-			if cleanLine != "" {
-				options = append(options, cleanLine)
+
+			if clean != "" {
+				options = append(options, strings.TrimSpace(clean))
 			}
 		}
 	}
 
-	// Ensure we have 3 options; if AI fails, provide fallbacks
-	for len(options) < 3 {
-		options = append(options, fmt.Sprintf("chore: update files (fallback %d)", len(options)+1))
-	}
-
+	if len(options) == 0 { options = []string{"chore: update project"} }
 	return options, report
 }
