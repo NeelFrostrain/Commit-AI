@@ -20,6 +20,7 @@ New to Commit-AI? Start here:
 | Document | Description |
 |----------|-------------|
 | [Quick Start](QUICK_START.md) | Installation and first-time setup |
+| [Update Guide](UPDATE_GUIDE.md) | How to update to latest version |
 | [Demo](DEMO.md) | Real-world examples and use cases |
 | [Enhanced Prompts](ENHANCED_PROMPTS.md) | How AI generates commit messages |
 
@@ -48,6 +49,9 @@ New to Commit-AI? Start here:
 
 **...install Commit-AI**
 → [Quick Start Guide](QUICK_START.md#installation)
+
+**...update to latest version**
+→ [Update Guide](UPDATE_GUIDE.md)
 
 **...see examples**
 → [Demo](DEMO.md)

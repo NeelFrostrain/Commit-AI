@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2024-12-XX
 
 ### Added
+- **Auto-Update Command**: New `commit-ai update` command to check and install updates
+  - `--check` flag to only check for updates
+  - `--force` flag to force update
+  - Automatic platform detection (Windows, macOS, Linux)
+  - Progress display during download
+  - Safe update with automatic backup
 - **Version Command**: New `commit-ai version` command showing detailed build info
 - **Enhanced Versioning**: Build date and git commit embedded in binaries
 - **Better Build System**: Improved build scripts with version tracking

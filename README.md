@@ -164,6 +164,15 @@ commit-ai -y
 # Use different AI model
 commit-ai -m llama-3.1-70b-versatile
 
+# Check version
+commit-ai version
+
+# Check for updates
+commit-ai update --check
+
+# Update to latest version
+commit-ai update
+
 # Combine flags
 commit-ai -cv  # Verbose + auto-commit
 ```
@@ -177,6 +186,16 @@ commit-ai -cv  # Verbose + auto-commit
 | `--verbose` | `-v` | Show detailed information |
 | `--model` | `-m` | Override AI model |
 | `--help` | `-h` | Show help message |
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `commit-ai` | Generate commit message (default) |
+| `commit-ai version` | Show version information |
+| `commit-ai update` | Update to latest version |
+| `commit-ai update --check` | Check for updates without installing |
+| `commit-ai update --force` | Force update even if on latest version |
 
 ### Workflow Example
 

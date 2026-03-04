@@ -10,6 +10,7 @@ import (
 	"github.com/NeelFrostrain/Commit-Ai/internal/ai"
 	"github.com/NeelFrostrain/Commit-Ai/internal/config"
 	"github.com/NeelFrostrain/Commit-Ai/internal/git"
+	"github.com/NeelFrostrain/Commit-Ai/internal/updater"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/algolyzer/groq-go"
@@ -62,6 +63,13 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Check for updates and install the latest version",
+	Long:  "Check GitHub for the latest release and automatically update to the newest version",
+	Run:   runUpdate,
+}
+
 // SetVersion sets version information from main package
 func SetVersion(v, date, commit string) {
 	version = v
@@ -76,10 +84,15 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.Flags().BoolVarP(&commitFlag, "commit", "c", false, "Commit changes after selection")
 	rootCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "Skip confirmation prompts")
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show detailed information")
 	rootCmd.Flags().StringVarP(&modelFlag, "model", "m", "", "Override AI model (default: llama-3.1-8b-instant)")
+
+	// Update command flags
+	updateCmd.Flags().BoolP("check", "c", false, "Only check for updates without installing")
+	updateCmd.Flags().BoolP("force", "f", false, "Force update even if already on latest version")
 }
 
 func runCommitAI(cmd *cobra.Command, args []string) {
@@ -344,4 +357,79 @@ Your commit messages should be:
 	} else {
 		fmt.Printf("\n%s Use -c flag to commit automatically\n", yellow("[Hint]"))
 	}
+}
+
+func runUpdate(cmd *cobra.Command, args []string) {
+	checkOnly, _ := cmd.Flags().GetBool("check")
+	forceUpdate, _ := cmd.Flags().GetBool("force")
+
+	fmt.Printf("%s Checking for updates...\n", cyan("[Update]"))
+
+	// Check for updates
+	release, hasUpdate, err := updater.CheckForUpdate(version)
+	if err != nil {
+		fmt.Printf("%s Failed to check for updates: %v\n", red("[Error]"), err)
+		fmt.Printf("%s Check your internet connection or try again later\n", yellow("[Hint]"))
+		return
+	}
+
+	if !hasUpdate && !forceUpdate {
+		fmt.Printf("%s You are already on the latest version (%s)\n", green("[✓]"), version)
+		return
+	}
+
+	// Display update information
+	updater.PrintUpdateInfo(release, version)
+
+	if checkOnly {
+		fmt.Printf("\n%s Run 'commit-ai update' to install the latest version\n", yellow("[Hint]"))
+		return
+	}
+
+	// Confirm update
+	var confirm bool
+	prompt := &survey.Confirm{
+		Message: "Do you want to update now?",
+		Default: true,
+	}
+	if err := survey.AskOne(prompt, &confirm); err != nil || !confirm {
+		fmt.Println("Update cancelled.")
+		return
+	}
+
+	// Get current executable path
+	exePath, err := updater.GetExecutablePath()
+	if err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		return
+	}
+
+	// Get appropriate asset for platform
+	asset, err := updater.GetAssetForPlatform(release)
+	if err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		fmt.Printf("%s Please download manually from: https://github.com/NeelFrostrain/Commit-Ai/releases\n", yellow("[Hint]"))
+		return
+	}
+
+	// Download update
+	if err := updater.DownloadUpdate(asset, exePath); err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		return
+	}
+
+	fmt.Printf("%s Download complete!\n", green("[✓]"))
+
+	// Install update
+	fmt.Printf("%s Installing update...\n", blue("[Update]"))
+	if err := updater.InstallUpdate(exePath); err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		fmt.Printf("%s You may need to run with elevated permissions\n", yellow("[Hint]"))
+		return
+	}
+
+	fmt.Printf("\n%s\n", green("═══════════════════════════════════════════"))
+	fmt.Printf("%s Successfully updated to %s!\n", green("🎉"), release.TagName)
+	fmt.Printf("%s\n", green("═══════════════════════════════════════════"))
+	fmt.Printf("\n%s Run 'commit-ai version' to verify the update\n", blue("[Info]"))
 }
