@@ -3,6 +3,7 @@ package git
 import (
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -16,15 +17,44 @@ type DiffStats struct {
 
 // GetStagedDiff retrieves the staged diff with optimizations
 func GetStagedDiff(excludePatterns []string, maxSize int) (string, error) {
+	// Add binary file patterns to exclude list
+	binaryPatterns := []string{
+		"*.exe", "*.dll", "*.so", "*.dylib", "*.a", "*.lib", "*.o",
+		"*.zip", "*.tar", "*.gz", "*.7z", "*.rar",
+		"*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico",
+		"*.pdf", "*.db", "*.sqlite", "*.dat",
+	}
+
+	// Filter staged files to exclude binaries
+	stagedFiles, err := GetStagedFiles()
+	if err != nil {
+		return "", fmt.Errorf("failed to get staged files: %w", err)
+	}
+
+	var textFiles []string
+	for _, file := range stagedFiles {
+		if !isBinaryFile(file, binaryPatterns) {
+			textFiles = append(textFiles, file)
+		}
+	}
+
+	// If no text files, return early
+	if len(textFiles) == 0 {
+		return "No text files to analyze (only binary files staged)", nil
+	}
+
+	// Combine exclude patterns
+	allExcludes := append(excludePatterns, binaryPatterns...)
+
 	// Get summary stats
-	diffArgs := append([]string{"diff", "--cached", "--stat", "--"}, excludePatterns...)
+	diffArgs := append([]string{"diff", "--cached", "--stat", "--"}, allExcludes...)
 	stats, err := exec.Command("git", diffArgs...).Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get diff stats: %w", err)
 	}
 
 	// Get actual code changes with reduced context
-	diffArgs = append([]string{"diff", "--cached", "-U2", "--"}, excludePatterns...)
+	diffArgs = append([]string{"diff", "--cached", "-U2", "--"}, allExcludes...)
 	diff, err := exec.Command("git", diffArgs...).Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get diff: %w", err)
@@ -38,6 +68,17 @@ func GetStagedDiff(excludePatterns []string, maxSize int) (string, error) {
 	}
 
 	return fullContext, nil
+}
+
+// isBinaryFile checks if a file matches binary patterns
+func isBinaryFile(filename string, patterns []string) bool {
+	for _, pattern := range patterns {
+		matched, _ := filepath.Match(pattern, filepath.Base(filename))
+		if matched {
+			return true
+		}
+	}
+	return false
 }
 
 // GetStagedFiles returns list of staged file names

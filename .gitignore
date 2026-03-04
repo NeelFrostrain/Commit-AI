@@ -1,10 +1,15 @@
 # Binary builds (development)
 *.exe
-!bin/*.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+
+# Production binaries (tracked separately or via releases)
+bin/*.exe
+bin/*.dll
+bin/*.so
+bin/*.dylib
 
 # Test binaries
 *.test
