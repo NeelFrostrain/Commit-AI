@@ -62,8 +62,11 @@ You don't need to manually create `.env` files.
 | **🧠 Deep Diff Analysis** | Understands code logic, not just file metadata.            |
 | **📝 Conventional Style** | Strictly follows the `type: description` standard.         |
 | **📊 Technical Reports**  | Generates a detailed bulleted summary for the commit body. |
+| **🎯 Smart Scope Detection** | Auto-detects scope from file paths (e.g., api, ui, auth). |
+| **✅ Message Validation** | Validates generated messages against Conventional Commits. |
 | **🛡️ Global Config**      | Set your API key once, use it in any project folder.       |
 | **🚀 Fast**               | Powered by Groq/Llama-3.1 for near-instant results.        |
+| **🔧 Customizable**       | Support for custom models, templates, and configurations.  |
 
 ---
 
@@ -75,7 +78,9 @@ You don't need to manually create `.env` files.
 | ----------- | ----- | ------------------------------------------------------- |
 | `--commit`  | `-c`  | Performs the `git commit` after generating the message. |
 | `--yes`     | `-y`  | Skips the confirmation prompt (Auto-pilot).             |
-| `--version` | `-v`  | Displays version information.                           |
+| `--verbose` | `-v`  | Shows detailed information during execution.            |
+| `--model`   | `-m`  | Override AI model (e.g., llama-3.1-70b-versatile).      |
+| `--version` |       | Displays version information.                           |
 
 ### Example Workflow
 
@@ -101,5 +106,18 @@ You don't need to manually create `.env` files.
 ## 📄 License
 
 MIT © [Neel Frostrain](https://github.com/NeelFrostrain)
+
+---
+
+## 📚 Documentation
+
+For detailed documentation, see the [docs](docs/) folder:
+
+- [Quick Start Guide](docs/QUICK_START.md) - Get started in 5 minutes
+- [Improvements & Roadmap](docs/IMPROVEMENTS.md) - Future enhancements
+- [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute
+- [Demo & Examples](docs/DEMO.md) - Real-world usage examples
+- [Changelog](docs/CHANGELOG.md) - Version history
+- [Upgrade Summary](docs/UPGRADE_SUMMARY.md) - Latest improvements
 
 ---

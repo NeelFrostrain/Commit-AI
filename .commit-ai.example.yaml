@@ -1,0 +1,57 @@
+# Commit-AI Configuration Example
+# Copy this to .commit-ai.yaml in your project root or home directory
+
+# AI Model Configuration
+model: "llama-3.1-8b-instant"  # Options: llama-3.1-8b-instant, llama-3.1-70b-versatile
+temperature: 0.6                # 0.0 = deterministic, 1.0 = creative
+max_tokens: 12000               # Maximum diff size to send to AI
+
+# Commit Message Rules
+rules:
+  max_title_length: 72          # Maximum characters in commit title
+  require_scope: false          # Require scope in commit messages
+  require_body: false           # Require commit body
+  allowed_types:                # Allowed commit types
+    - feat
+    - fix
+    - docs
+    - style
+    - refactor
+    - perf
+    - test
+    - chore
+    - build
+    - ci
+    - revert
+
+# Scope Configuration
+scopes:
+  auto_detect: true             # Auto-detect scope from file paths
+  aliases:                      # Map directory names to scopes
+    frontend: ui
+    backend: api
+    database: db
+    documentation: docs
+
+# Behavior
+behavior:
+  auto_stage: false             # Automatically stage all files if none staged
+  show_diff_stats: true         # Show diff statistics before generating
+  validate_messages: true       # Validate generated messages
+
+# Templates (optional)
+templates:
+  feat: |
+    feat({scope}): {description}
+    
+    {body}
+  fix: |
+    fix({scope}): {description}
+    
+    Fixes: {body}
+
+# Ignore Patterns (in addition to .gitignore)
+ignore:
+  - "*.log"
+  - "*.tmp"
+  - ".DS_Store"

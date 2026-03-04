@@ -3,6 +3,7 @@ module github.com/NeelFrostrain/Commit-Ai-Go
 go 1.25.6
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/algolyzer/groq-go v1.0.0
 	github.com/fatih/color v1.18.0
 	github.com/joho/godotenv v1.5.1
