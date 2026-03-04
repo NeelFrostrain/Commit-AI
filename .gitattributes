@@ -20,10 +20,86 @@
 *.jpeg binary
 *.gif binary
 *.ico binary
-*.svg binary
+*.bmp binary
+*.tiff binary
+*.tif binary
+*.webp binary
+*.psd binary
+*.ai binary
+
+# Unity specific
+*.unity binary
+*.prefab binary
+*.asset binary
+*.mat binary
+*.controller binary
+*.anim binary
+*.overrideController binary
+*.mask binary
+*.cubemap binary
+*.flare binary
+*.physicMaterial binary
+*.physicsMaterial2D binary
+*.guiskin binary
+*.fontsettings binary
+*.spriteatlas binary
+*.terrainlayer binary
+
+# Unity assets
+*.fbx binary
+*.obj binary
+*.dae binary
+*.3ds binary
+*.dxf binary
+*.max binary
+*.blend binary
+*.mb binary
+*.ma binary
+
+# Unreal Engine
+*.uasset binary
+*.umap binary
+*.upk binary
+*.udk binary
+*.u binary
+
+# Audio files
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.flac binary
+*.aac binary
+*.wma binary
+*.m4a binary
+
+# Video files
+*.mp4 binary
+*.avi binary
+*.mov binary
+*.wmv binary
+*.flv binary
+*.mkv binary
+*.webm binary
+
+# 3D textures and materials
+*.dds binary
+*.tga binary
+*.exr binary
+*.hdr binary
+
+# Font files
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
 
 # Other binary formats
 *.pdf binary
 *.db binary
 *.sqlite binary
+*.sqlite3 binary
 *.dat binary
+*.bin binary
+*.pak binary
+*.cache binary

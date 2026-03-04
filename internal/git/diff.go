@@ -19,10 +19,30 @@ type DiffStats struct {
 func GetStagedDiff(excludePatterns []string, maxSize int) (string, error) {
 	// Add binary file patterns to exclude list
 	binaryPatterns := []string{
+		// Executables and libraries
 		"*.exe", "*.dll", "*.so", "*.dylib", "*.a", "*.lib", "*.o",
+		// Archives
 		"*.zip", "*.tar", "*.gz", "*.7z", "*.rar",
-		"*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico",
-		"*.pdf", "*.db", "*.sqlite", "*.dat",
+		// Images
+		"*.png", "*.jpg", "*.jpeg", "*.gif", "*.ico", "*.bmp", "*.tiff", "*.tif", "*.webp", "*.psd", "*.ai",
+		// Unity specific
+		"*.unity", "*.prefab", "*.asset", "*.mat", "*.controller", "*.anim", "*.overrideController",
+		"*.mask", "*.cubemap", "*.flare", "*.physicMaterial", "*.physicsMaterial2D", "*.guiskin",
+		"*.fontsettings", "*.spriteatlas", "*.terrainlayer",
+		// 3D models
+		"*.fbx", "*.obj", "*.dae", "*.3ds", "*.dxf", "*.max", "*.blend", "*.mb", "*.ma",
+		// Unreal Engine
+		"*.uasset", "*.umap", "*.upk", "*.udk", "*.u",
+		// Audio
+		"*.mp3", "*.wav", "*.ogg", "*.flac", "*.aac", "*.wma", "*.m4a",
+		// Video
+		"*.mp4", "*.avi", "*.mov", "*.wmv", "*.flv", "*.mkv", "*.webm",
+		// Textures
+		"*.dds", "*.tga", "*.exr", "*.hdr",
+		// Fonts
+		"*.ttf", "*.otf", "*.woff", "*.woff2", "*.eot",
+		// Other binary
+		"*.pdf", "*.db", "*.sqlite", "*.sqlite3", "*.dat", "*.bin", "*.pak", "*.cache",
 	}
 
 	// Filter staged files to exclude binaries

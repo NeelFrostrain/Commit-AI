@@ -38,6 +38,7 @@ New to Commit-AI? Start here:
 | Document | Description |
 |----------|-------------|
 | [Changelog](CHANGELOG.md) | Version history and changes |
+| [Supported Files](SUPPORTED_FILES.md) | File types and binary filtering |
 | [Improvements](IMPROVEMENTS.md) | Future enhancements roadmap |
 | [TODO](TODO.md) | Current action items |
 

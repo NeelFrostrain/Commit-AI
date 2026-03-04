@@ -255,6 +255,7 @@ commit-ai -v
 
 ### Reference
 - [Changelog](docs/CHANGELOG.md) - Version history
+- [Supported Files](docs/SUPPORTED_FILES.md) - File types and filtering
 - [Before & After](docs/BEFORE_AFTER.md) - Visual comparisons
 - [Test Report](docs/TEST_REPORT.md) - Test results
 
