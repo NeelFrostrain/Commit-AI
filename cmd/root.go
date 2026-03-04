@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
+	"runtime"
 
-	"github.com/NeelFrostrain/Commit-Ai-Go/internal/ai"
-	"github.com/NeelFrostrain/Commit-Ai-Go/internal/git"
+	"github.com/NeelFrostrain/Commit-Ai/internal/ai"
+	"github.com/NeelFrostrain/Commit-Ai/internal/config"
+	"github.com/NeelFrostrain/Commit-Ai/internal/git"
+	"github.com/NeelFrostrain/Commit-Ai/internal/updater"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/algolyzer/groq-go"
 	"github.com/fatih/color"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -22,15 +23,60 @@ var (
 	blue    = color.New(color.FgBlue).SprintFunc()
 	red     = color.New(color.FgRed, color.Bold).SprintFunc()
 	yellow  = color.New(color.FgYellow).SprintFunc()
+	green   = color.New(color.FgGreen, color.Bold).SprintFunc()
+	cyan    = color.New(color.FgCyan, color.Bold).SprintFunc()
 )
 
-var commitFlag bool
-var yesFlag bool
+var (
+	commitFlag  bool
+	yesFlag     bool
+	verboseFlag bool
+	emojiFlag   bool
+	modelFlag   string
+)
+
+var (
+	version   = "dev"
+	buildDate = "unknown"
+	gitCommit = "unknown"
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "commit-ai",
 	Short: "AI-powered semantic commit generator",
-	Run:   runCommitAI,
+	Long: `Commit-AI analyzes your git changes and generates professional,
+conventional commit messages using AI. It helps maintain clean
+git history with minimal effort.`,
+	Run: runCommitAI,
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version information",
+	Long:  "Display detailed version information including build date and git commit",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("%s\n", cyan("Commit-AI"))
+		fmt.Printf("  Version:    %s\n", version)
+		fmt.Printf("  Build Date: %s\n", buildDate)
+		fmt.Printf("  Git Commit: %s\n", gitCommit)
+		fmt.Printf("  Go Version: %s\n", runtime.Version())
+		fmt.Printf("  OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
+	},
+}
+
+var updateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Check for updates and install the latest version",
+	Long:  "Check GitHub for the latest release and automatically update to the newest version",
+	Run:   runUpdate,
+}
+
+// SetVersion sets version information from main package
+func SetVersion(v, date, commit string) {
+	version = v
+	buildDate = date
+	gitCommit = commit
+	rootCmd.Version = v
 }
 
 func Execute() error {
@@ -38,116 +84,354 @@ func Execute() error {
 }
 
 func init() {
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.Flags().BoolVarP(&commitFlag, "commit", "c", false, "Commit changes after selection")
 	rootCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "Skip confirmation prompts")
+	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show detailed information")
+	rootCmd.Flags().BoolVarP(&emojiFlag, "emoji", "e", false, "Add emojis to commit messages")
+	rootCmd.Flags().StringVarP(&modelFlag, "model", "m", "", "Override AI model (default: llama-3.1-8b-instant)")
+
+	// Update command flags
+	updateCmd.Flags().BoolP("check", "c", false, "Only check for updates without installing")
+	updateCmd.Flags().BoolP("force", "f", false, "Force update even if already on latest version")
 }
 
 func runCommitAI(cmd *cobra.Command, args []string) {
-	_ = godotenv.Load()
-	apiKey := getAPIKey()
-
-	// 1. Smart Staging Check
-	staged, _ := exec.Command("git", "diff", "--cached", "--name-only").Output()
-	if len(strings.TrimSpace(string(staged))) == 0 {
-		var confirm bool
-		fmt.Printf("%s No staged changes detected.\n", yellow("[!]"))
-		survey.AskOne(&survey.Confirm{Message: "Stage all files and continue?"}, &confirm)
-		if !confirm { return }
-		exec.Command("git", "add", ".").Run()
-	}
-
-	// 2. Diff Optimization
-	// We only send the summary + the diff to give the AI context of what was ADDED vs DELETED
-	exclude := git.GetIgnorePatterns()
-	diffArgs := append([]string{"diff", "--cached", "--stat", "--"}, exclude...)
-	stats, _ := exec.Command("git", diffArgs...).Output()
-	
-	// Get actual code changes
-	diffArgs = append([]string{"diff", "--cached", "-U2", "--"}, exclude...) // Lower context lines to save tokens
-	out, _ := exec.Command("git", diffArgs...).Output()
-	
-	fullContext := fmt.Sprintf("Summary:\n%s\n\nDiff:\n%s", stats, out)
-	if len(fullContext) > 12000 {
-		fullContext = fullContext[:12000] + "\n...[diff truncated]"
-	}
-
-	// 3. AI Request with "Thinking" indicator
-	fmt.Printf("%s %s: Brainstorming commit options...", magenta("[Commit-AI]"), blue("[Info]"))
-	
-	client := groq.NewClient(apiKey)
-	temp := 0.5 // Slightly higher for better creativity in options
-	resp, err := client.CreateChatCompletion(context.Background(), groq.ChatCompletionRequest{
-		Model: "llama-3.1-8b-instant",
-		Messages: []groq.ChatMessage{
-			{
-				Role: groq.RoleSystem,
-				Content: `You are a Principal Engineer. Analyze the diff and provide 3 distinct semantic titles in <options> and a concise technical report in <report>.
-				If files were deleted, use 'refactor' or 'chore'. If new files, use 'feat'.`,
-			},
-			{Role: groq.RoleUser, Content: ai.BuildPrompt(fullContext)},
-		},
-		Temperature: &temp,
-	})
-	fmt.Print("\r") // Clear the "Analyzing" line
-
+	// Load configuration
+	cfg, err := config.Load()
 	if err != nil {
-		fmt.Printf("%s AI Error: %v\n", red("[Error]"), err)
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		fmt.Printf("%s Visit https://console.groq.com/keys to get your API key\n", yellow("[Info]"))
+
+		// Offer to save API key
+		var apiKey string
+		prompt := &survey.Input{Message: "Enter your GROQ API key (or press Enter to exit):"}
+		if err := survey.AskOne(prompt, &apiKey); err != nil || apiKey == "" {
+			return
+		}
+
+		if err := config.SaveAPIKey(apiKey); err != nil {
+			fmt.Printf("%s Failed to save API key: %v\n", red("[Error]"), err)
+			return
+		}
+
+		fmt.Printf("%s API key saved to ~/.commit-ai.env\n", green("[Success]"))
+		cfg = &config.Config{APIKey: apiKey, Model: "llama-3.1-8b-instant", Temperature: 0.7, MaxTokens: 15000}
+	}
+
+	// Override model if flag is set
+	if modelFlag != "" {
+		cfg.Model = modelFlag
+	}
+
+	// Check for ANY changes (staged or unstaged)
+	hasStaged, err := git.HasStagedChanges()
+	if err != nil {
+		fmt.Printf("%s Failed to check staged changes: %v\n", red("[Error]"), err)
 		return
 	}
 
-	// 4. Interactive Selection (Title)
-	options, aiReport := ai.ParseMultiResponse(resp.Choices[0].Message.Content)
-	var selectedTitle string
-	survey.AskOne(&survey.Select{
-		Message: "Pick a Title:",
-		Options: append(options, "Edit manually...", "Cancel"),
-	}, &selectedTitle)
-
-	if selectedTitle == "Cancel" { return }
-	if selectedTitle == "Edit manually..." {
-		survey.AskOne(&survey.Input{Message: "Custom Title:", Default: options[0]}, &selectedTitle)
+	hasUnstaged, err := git.HasUnstagedChanges()
+	if err != nil {
+		fmt.Printf("%s Failed to check unstaged changes: %v\n", red("[Error]"), err)
+		return
 	}
 
-	// 5. Interactive Selection (Report)
+	if !hasStaged && !hasUnstaged {
+		fmt.Printf("%s No changes detected in repository.\n", yellow("[!]"))
+		return
+	}
+
+	// If there are unstaged changes, offer to stage them
+	if hasUnstaged {
+		if !yesFlag {
+			fmt.Printf("%s Found unstaged changes.\n", yellow("[!]"))
+			var confirm bool
+			survey.AskOne(&survey.Confirm{Message: "Stage all changes (git add .)?"}, &confirm)
+			if !confirm {
+				if !hasStaged {
+					fmt.Printf("%s No staged changes to commit.\n", yellow("[!]"))
+					return
+				}
+				fmt.Printf("%s Proceeding with only staged changes...\n", blue("[Info]"))
+			} else {
+				if err := git.StageAllFiles(); err != nil {
+					fmt.Printf("%s Failed to stage files: %v\n", red("[Error]"), err)
+					return
+				}
+				fmt.Printf("%s All changes staged\n", green("[✓]"))
+			}
+		} else {
+			// Auto-stage in yes mode
+			if err := git.StageAllFiles(); err != nil {
+				fmt.Printf("%s Failed to stage files: %v\n", red("[Error]"), err)
+				return
+			}
+			fmt.Printf("%s All changes staged\n", green("[✓]"))
+		}
+	}
+
+	// Get staged files for scope suggestion
+	stagedFiles, _ := git.GetStagedFiles()
+	suggestedScope := ai.SuggestScope(stagedFiles)
+
+	if verboseFlag {
+		if suggestedScope != "" {
+			fmt.Printf("%s Detected scope: %s\n", blue("[Info]"), suggestedScope)
+		}
+		fmt.Printf("%s Analyzing %d files\n", blue("[Info]"), len(stagedFiles))
+	}
+
+	// Get optimized diff
+	exclude := git.GetIgnorePatterns()
+	fullContext, err := git.GetStagedDiff(exclude, 8000) // Reduced for API limits
+	if err != nil {
+		fmt.Printf("%s Failed to get diff: %v\n", red("[Error]"), err)
+		return
+	}
+
+	if verboseFlag {
+		fmt.Printf("%s Diff size: %d characters\n", blue("[Info]"), len(fullContext))
+	}
+
+	// AI Request with progress indicator
+	fmt.Printf("%s Analyzing changes with %s...\n", magenta("[Commit-AI]"), cfg.Model)
+
+	client := groq.NewClient(cfg.APIKey)
+	temp := cfg.Temperature
+	resp, err := client.CreateChatCompletion(context.Background(), groq.ChatCompletionRequest{
+		Model: cfg.Model,
+		Messages: []groq.ChatMessage{
+			{
+				Role: groq.RoleSystem,
+				Content: `You are a Principal Engineer and Git expert specializing in writing exceptional commit messages.
+
+Your expertise includes:
+- Deep understanding of Conventional Commits specification
+- Ability to analyze code changes and understand their impact
+- Writing clear, comprehensive technical documentation
+- Organizing information into logical, scannable categories
+- Providing actionable insights and metrics
+
+When analyzing changes:
+1. Identify the primary change type and scope accurately
+2. Group related changes into logical categories (ARCHITECTURE, FEATURES, BUG FIXES, etc.)
+3. Provide specific technical details with context
+4. Include metrics, file counts, and measurements
+5. Explain both WHAT changed and WHY it matters
+6. Structure reports for easy scanning with clear headers
+7. End with IMPACT section showing tangible benefits
+
+Your commit messages should be:
+- Professional and technically accurate
+- Well-organized with clear categories
+- Detailed enough to understand without reading code
+- Focused on impact and reasoning, not just changes
+- Following Conventional Commits format strictly`,
+			},
+			{Role: groq.RoleUser, Content: ai.BuildPrompt(fullContext, emojiFlag)},
+		},
+		Temperature: &temp,
+	})
+
+	if err != nil {
+		fmt.Printf("%s AI request failed: %v\n", red("[Error]"), err)
+		fmt.Printf("%s Check your API key and network connection\n", yellow("[Hint]"))
+		return
+	}
+
+	// Parse AI response
+	rawResponse := resp.Choices[0].Message.Content
+	options, aiReport := ai.ParseMultiResponse(rawResponse)
+
+	if verboseFlag {
+		fmt.Printf("%s Generated %d options\n", blue("[Info]"), len(options))
+		// Debug: Show if AI didn't follow format
+		if len(options) == 1 && options[0] == "chore: update project" {
+			fmt.Printf("%s AI didn't follow format. First 300 chars of response:\n", yellow("[Debug]"))
+			maxLen := 300
+			if len(rawResponse) < maxLen {
+				maxLen = len(rawResponse)
+			}
+			fmt.Printf("%s\n", rawResponse[:maxLen])
+		}
+	}
+
+	// Validate options
+	validOptions := make([]string, 0, len(options))
+	for _, opt := range options {
+		if ai.ValidateCommitMessage(opt) {
+			validOptions = append(validOptions, opt)
+		} else if verboseFlag {
+			fmt.Printf("%s Skipping invalid option: %s\n", yellow("[Warning]"), opt)
+		}
+	}
+
+	if len(validOptions) == 0 {
+		validOptions = options // Fallback to all options if validation is too strict
+	}
+
+	// Interactive title selection
+	var selectedTitle string
+	titlePrompt := &survey.Select{
+		Message: "Select commit title:",
+		Options: append(validOptions, "✏️  Edit manually...", "❌ Cancel"),
+	}
+
+	if err := survey.AskOne(titlePrompt, &selectedTitle); err != nil {
+		return
+	}
+
+	if selectedTitle == "❌ Cancel" {
+		fmt.Println("Cancelled.")
+		return
+	}
+
+	if selectedTitle == "✏️  Edit manually..." {
+		inputPrompt := &survey.Input{
+			Message: "Enter custom commit title:",
+			Default: validOptions[0],
+		}
+		if err := survey.AskOne(inputPrompt, &selectedTitle); err != nil || selectedTitle == "" {
+			return
+		}
+	}
+
+	// Interactive report selection
 	var selectedReport string
-	reportChoices := []string{"Keep AI Report", "Edit Report", "No Report"}
+	reportChoices := []string{"📝 Keep AI report", "✏️  Edit report", "⊘  No report"}
 	var reportAction string
-	survey.AskOne(&survey.Select{Message: "Commit Details:", Options: reportChoices}, &reportAction)
+
+	reportPrompt := &survey.Select{
+		Message: "Commit body:",
+		Options: reportChoices,
+	}
+
+	if err := survey.AskOne(reportPrompt, &reportAction); err != nil {
+		return
+	}
 
 	switch reportAction {
-	case "Keep AI Report":
+	case "📝 Keep AI report":
 		selectedReport = aiReport
-	case "Edit Report":
-		survey.AskOne(&survey.Multiline{Message: "Edit Body:", Default: aiReport}, &selectedReport)
-	case "No Report":
+	case "✏️  Edit report":
+		editPrompt := &survey.Multiline{
+			Message: "Edit commit body:",
+			Default: aiReport,
+		}
+		survey.AskOne(editPrompt, &selectedReport)
+	case "⊘  No report":
 		selectedReport = ""
 	}
 
-	// 6. Execution
+	// Display final commit message
+	fmt.Printf("\n%s\n", magenta("─────────────────────────────────"))
+	fmt.Printf("%s %s\n", blue("Title:"), selectedTitle)
+	if selectedReport != "" {
+		fmt.Printf("%s\n%s\n", blue("Body:"), selectedReport)
+	}
+	fmt.Printf("%s\n", magenta("─────────────────────────────────"))
+
+	// Execute commit
 	if commitFlag {
-		fmt.Printf("\n%s\n%s %s\n%s %s\n", magenta("─── FINAL ───"), blue("TITLE:"), selectedTitle, blue("BODY:"), selectedReport)
-		if yesFlag || askConfirm("Execute git commit?") {
+		shouldCommit := yesFlag
+		if !yesFlag {
+			survey.AskOne(&survey.Confirm{Message: "Execute git commit?"}, &shouldCommit)
+		}
+
+		if shouldCommit {
 			args := []string{"commit", "-m", selectedTitle}
 			if selectedReport != "" {
 				args = append(args, "-m", selectedReport)
 			}
+
 			cmd := exec.Command("git", args...)
 			cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
-			if err := cmd.Run(); err == nil {
-				fmt.Println(color.GreenString("✔ Commit created!"))
+
+			if err := cmd.Run(); err != nil {
+				fmt.Printf("%s Commit failed: %v\n", red("[Error]"), err)
+				return
 			}
+
+			fmt.Printf("\n%s Commit created successfully!\n", green("✔"))
 		}
+	} else {
+		fmt.Printf("\n%s Use -c flag to commit automatically\n", yellow("[Hint]"))
 	}
 }
 
-func getAPIKey() string {
-	if key := os.Getenv("GROQ_API_KEY"); key != "" { return key }
-	fmt.Println(red("GROQ_API_KEY not found in environment.")); os.Exit(1)
-	return ""
-}
+func runUpdate(cmd *cobra.Command, args []string) {
+	checkOnly, _ := cmd.Flags().GetBool("check")
+	forceUpdate, _ := cmd.Flags().GetBool("force")
 
-func askConfirm(msg string) bool {
-	res := false
-	survey.AskOne(&survey.Confirm{Message: msg}, &res)
-	return res
+	fmt.Printf("%s Checking for updates...\n", cyan("[Update]"))
+
+	// Check for updates
+	release, hasUpdate, err := updater.CheckForUpdate(version)
+	if err != nil {
+		fmt.Printf("%s Failed to check for updates: %v\n", red("[Error]"), err)
+		fmt.Printf("%s Check your internet connection or try again later\n", yellow("[Hint]"))
+		return
+	}
+
+	if !hasUpdate && !forceUpdate {
+		fmt.Printf("%s You are already on the latest version (%s)\n", green("[✓]"), version)
+		return
+	}
+
+	// Display update information
+	updater.PrintUpdateInfo(release, version)
+
+	if checkOnly {
+		fmt.Printf("\n%s Run 'commit-ai update' to install the latest version\n", yellow("[Hint]"))
+		return
+	}
+
+	// Confirm update
+	var confirm bool
+	prompt := &survey.Confirm{
+		Message: "Do you want to update now?",
+		Default: true,
+	}
+	if err := survey.AskOne(prompt, &confirm); err != nil || !confirm {
+		fmt.Println("Update cancelled.")
+		return
+	}
+
+	// Get current executable path
+	exePath, err := updater.GetExecutablePath()
+	if err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		return
+	}
+
+	// Get appropriate asset for platform
+	asset, err := updater.GetAssetForPlatform(release)
+	if err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		fmt.Printf("%s Please download manually from: https://github.com/NeelFrostrain/Commit-Ai/releases\n", yellow("[Hint]"))
+		return
+	}
+
+	// Download update
+	if err := updater.DownloadUpdate(asset, exePath); err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		return
+	}
+
+	fmt.Printf("%s Download complete!\n", green("[✓]"))
+
+	// Install update
+	fmt.Printf("%s Installing update...\n", blue("[Update]"))
+	if err := updater.InstallUpdate(exePath); err != nil {
+		fmt.Printf("%s %v\n", red("[Error]"), err)
+		fmt.Printf("%s You may need to run with elevated permissions\n", yellow("[Hint]"))
+		return
+	}
+
+	fmt.Printf("\n%s\n", green("═══════════════════════════════════════════"))
+	fmt.Printf("%s Successfully updated to %s!\n", green("🎉"), release.TagName)
+	fmt.Printf("%s\n", green("═══════════════════════════════════════════"))
+	fmt.Printf("\n%s Run 'commit-ai version' to verify the update\n", blue("[Info]"))
 }
