@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Better Build System**: Improved build scripts with version tracking
 - **Comprehensive Documentation**: Organized docs with build and release guides
 - **Production Binaries**: Pre-built binaries in `bin/` folder for releases
+- **Binary File Filtering**: Added `.gitattributes` to mark binary files and prevent AI analysis
 
 ### Changed
 - **Project Rename**: Changed from `Commit-Ai-Go` to `Commit-Ai`
@@ -28,10 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation Structure**: Cleaned up and reorganized documentation
 - **Build Scripts**: Enhanced with better version information display
 - **AI Prompts**: Improved to only show "BREAKING CHANGES:" when there are actual breaking changes
+- **Git Ignore**: Updated to properly exclude binary files from tracking
 
 ### Fixed
 - Character encoding issues in PowerShell build script
 - Module import paths throughout the codebase
+- **Binary File Analysis**: AI no longer analyzes binary files (`.exe`, `.dll`, `.so`, etc.)
+- **Diff Filtering**: Enhanced `GetStagedDiff()` to automatically exclude binary files from analysis
 
 ### Removed
 - Temporary documentation files (summaries, reports)
