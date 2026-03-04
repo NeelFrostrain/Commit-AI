@@ -8,7 +8,6 @@ import (
 // BuildPrompt creates an enhanced prompt with better context and instructions
 func BuildPrompt(diff string, useEmojis bool) string {
 	emojiInstructions := ""
-	emojiExamples := ""
 
 	if useEmojis {
 		emojiInstructions = `
@@ -33,123 +32,93 @@ Use emojis in:
 1. Commit title: "✨ feat(api): add user authentication"
 2. Category headers: "✨ FEATURES:", "🐛 BUG FIXES:", "📚 DOCUMENTATION:"
 3. Bullet points for visual hierarchy`
-
-		emojiExamples = `
-EXAMPLE WITH EMOJIS:
-<options>
-1. ✨ feat(api): add user authentication endpoints
-2. 🔒 feat(auth): implement JWT-based login system
-3. 🔧 chore(security): add authentication middleware
-</options>
-<report>
-✨ FEATURES:
-- 🔐 Added JWT authentication with RS256 signing
-- 🚦 Implemented login endpoint with rate limiting (5 attempts/min)
-- 🛡️ Created middleware for protected routes with role-based access
-
-🔧 TECHNICAL DETAILS:
-- 📊 5 files changed: 250 insertions, 10 deletions
-- ✅ Test coverage: 90%%
-- ⚡ Token validation: <1ms average
-
-💡 IMPACT:
-- 🔒 Improved security with industry-standard JWT
-- 🚀 Better user experience with automatic token refresh
-- 📉 Reduced server load with stateless authentication
-</report>`
 	}
 
 	return fmt.Sprintf(`You are a Principal Engineer analyzing git changes. Generate 3 professional commit message titles and a comprehensive technical report.
 
 CRITICAL INSTRUCTIONS:
-1. You MUST analyze the ACTUAL code changes in the diff below
-2. You MUST use the exact XML-style tags shown below
-3. DO NOT make up features or changes that are not in the diff
-4. DO NOT use generic examples - analyze the REAL changes
-5. Be SPECIFIC about what files changed and what code was added/modified/deleted
-
-CRITICAL: You MUST use the exact XML-style tags shown below. Do not use markdown, do not use any other format.
-%s
-ANALYSIS REQUIREMENTS:
-1. READ THE DIFF CAREFULLY - identify what actually changed
-2. Identify PRIMARY change type and scope from file paths and code changes
-3. Analyze WHAT changed (specific functions, variables, logic)
-4. Explain WHY it matters based on the code context
-5. Use imperative mood ("add" not "added")
-6. Keep titles under 72 characters
-7. Provide detailed, structured report based on ACTUAL changes
+1. Analyze ACTUAL code changes in the diff - be SPECIFIC
+2. Use exact XML-style tags: <options> and <report>
+3. DO NOT invent features not in the diff
+4. Include specific file names, function names, metrics
+5. Provide detailed explanations with technical context
 
 CHANGE TYPES:
-- feat: New functionality or capability (new functions, endpoints, features)
-- fix: Bug fixes or error corrections (fixing logic, handling errors)
-- refactor: Code restructuring without behavior change (renaming, reorganizing)
-- perf: Performance improvements (optimization, caching)
-- style: Formatting, whitespace (code style only)
-- docs: Documentation only (comments, README, docs)
-- test: Adding/updating tests (test files, test cases)
-- chore: Build, dependencies, tooling (package.json, go.mod, config)
-- build: Build system changes (Makefile, build scripts)
-- ci: CI/CD changes (GitHub Actions, CI config)
+- feat: New functionality (new functions, endpoints)
+- fix: Bug fixes (fixing logic, errors)
+- refactor: Code restructuring (renaming, reorganizing)
+- perf: Performance improvements (optimization)
+- style: Formatting/whitespace
+- docs: Documentation only
+- test: Tests
+- chore: Build, dependencies, tooling
+- build: Build system changes
+- ci: CI/CD changes
 
-OUTPUT FORMAT (STRICT - USE THESE EXACT TAGS):
+OUTPUT FORMAT (STRICT):
 <options>
-1. type(scope): concise description of ACTUAL change
-2. type(scope): alternative description of ACTUAL change
-3. type(scope): different perspective on ACTUAL change
+1. type(scope): description of ACTUAL change
+2. type(scope): alternative description
+3. type(scope): different perspective
 </options>
 <report>
-[CATEGORY NAME]:
-- Specific change with technical details FROM THE DIFF
-- Another change with context FROM THE DIFF
-- Impact or reasoning based on ACTUAL code
-
-[ANOTHER CATEGORY]:
-- Detailed technical change FROM THE DIFF
-- Implementation specifics FROM THE DIFF
-- Benefits or improvements based on ACTUAL changes
+[CATEGORY]:
+- Specific change with technical details FROM DIFF
+- Implementation specifics with file/function names
+- Impact or reasoning based on code
 
 TECHNICAL DETAILS:
-- Files changed statistics (count from diff)
-- Key metrics or measurements FROM THE DIFF
-- Test results if applicable FROM THE DIFF
+- Files changed: X files, Y insertions(+), Z deletions(-)
+- Specific files: [list from diff]
+- Key changes: [specific functions/variables from diff]
+- Metrics: [measurements from diff]
 
 IMPACT:
-- Performance improvements (if evident from code)
-- User experience enhancements (if evident from code)
-- Developer experience improvements (if evident from code)
+- Performance improvements (with metrics if evident)
+- User/developer experience enhancements
+- Code quality improvements
+- Security/scalability improvements
 </report>
 
-IMPORTANT NOTES:
-- Only include "BREAKING CHANGES:" section if there are actual breaking changes in the diff
-- If no breaking changes, do NOT include that section at all
-- Use clear category names like FEATURES, BUG FIXES, IMPROVEMENTS, etc.
-- Keep categories relevant to the ACTUAL changes in the diff
-- DO NOT invent features or changes that are not in the diff
-- BE SPECIFIC about function names, variable names, file names from the diff
+IMPORTANT:
+- Only include "BREAKING CHANGES:" if actual breaking changes exist
+- Use categories: FEATURES, BUG FIXES, IMPROVEMENTS, ARCHITECTURE, etc.
+- BE SPECIFIC about names and metrics from the diff
+- EXPLAIN WHY changes matter, not just WHAT changed
+- Include file counts and line statistics
 
-EXAMPLE OUTPUT (NO BREAKING CHANGES):
+EXAMPLE:
 <options>
-1. fix(cache): resolve memory leak in cleanup method
-2. fix(memory): prevent memory retention in cache
-3. chore(cache): improve cleanup implementation
+1. fix(parser): improve AI prompt accuracy and diff handling
+2. fix(git): resolve diff retrieval and binary file filtering
+3. refactor(ai): enhance prompt engineering for better analysis
 </options>
 <report>
+IMPROVEMENTS:
+- Enhanced AI prompt with critical instructions for accurate analysis
+- Added warnings against generic/invented features
+- Improved prompt clarity with 'FROM THE DIFF' annotations
+
 BUG FIXES:
-- Fixed memory leak in cache cleanup method
-- Changed cleanup to delete items individually
-- Added proper resource cleanup in defer statements
+- Fixed GetStagedDiff to properly handle exclude patterns
+- Corrected git diff command arguments to avoid filtering text files
+- Fixed BuildPrompt test to pass emoji flag parameter
 
 TECHNICAL DETAILS:
-- 1 file changed: 15 insertions, 8 deletions
-- Memory usage reduced by 40%% in tests
+- 3 files changed: 122 insertions(+), 42 deletions(-)
+- Files: internal/ai/parser.go, internal/ai/parser_test.go, internal/git/diff.go
+- Improved diff retrieval from 17 to 6596+ characters
+- Enhanced validation for emoji-prefixed commits
 
 IMPACT:
-- Prevents memory leak in production
-- Improves application stability
+- AI generates accurate commit messages from actual code changes
+- Diff analysis no longer loses content
+- Better accuracy and relevance
+- Improved developer experience
 </report>
 %s
-NOW ANALYZE THIS DIFF CAREFULLY AND DESCRIBE ONLY WHAT YOU SEE:
-%s`, emojiInstructions, emojiExamples, diff)
+NOW ANALYZE THIS DIFF AND DESCRIBE ONLY WHAT YOU SEE:
+%s`, emojiInstructions, diff)
 }
 
 // ParseResponse extracts title and report from AI response (legacy single-option format)
