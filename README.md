@@ -8,8 +8,9 @@
 [![Go](https://img.shields.io/badge/go-%3E%3D1.21-00ADD8?style=flat-square&logo=go&logoColor=white)](https://golang.org)
 [![Groq](https://img.shields.io/badge/Groq-AI-cyan?style=flat-square)](https://groq.com)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE)
+[![Test Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen?style=flat-square)](docs/TESTING.md)
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
 
 </div>
 
@@ -19,29 +20,31 @@
 
 Commit-AI is an intelligent Git commit message generator that analyzes your code changes and creates professional, detailed commit messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
-**Stop writing vague commits like:**
+**Stop writing vague commits:**
 ```
 git commit -m "fixed stuff"
 git commit -m "updates"
 git commit -m "wip"
 ```
 
-**Start writing professional commits like:**
+**Start writing professional commits:**
 ```
-feat(api): add JWT authentication system
+✨ feat(api): add JWT authentication system
 
 FEATURES:
 - Implemented JWT-based authentication with RS256 signing
-- Added login endpoint with rate limiting
-- Created middleware for protected routes
+- Added login endpoint with rate limiting (5 attempts/minute)
+- Created middleware for protected routes with role-based access
 
 TECHNICAL DETAILS:
-- 8 files changed: 450 insertions, 20 deletions
+- 8 files changed: 450 insertions(+), 20 deletions(-)
 - Test coverage: 95% on auth module
+- Performance: Token validation <1ms average
 
 IMPACT:
 - Improved security with industry-standard JWT
 - Better user experience with automatic token refresh
+- Reduced server load with stateless authentication
 ```
 
 ---
@@ -52,11 +55,13 @@ IMPACT:
 - **Deep Diff Analysis**: Understands code logic, not just file metadata
 - **Scope Detection**: Automatically detects scope from file paths (api, ui, auth, etc.)
 - **Change Classification**: Identifies feat, fix, refactor, perf, docs, and more
+- **Binary Filtering**: Excludes 50+ binary file types (executables, images, audio, video, 3D models, etc.)
 
 ### 📝 Professional Output
 - **Conventional Commits**: Strictly follows the `type(scope): description` standard
 - **Structured Reports**: Generates detailed, categorized commit bodies
 - **Multiple Options**: Provides 3 distinct commit message suggestions
+- **Emoji Support**: Optional emoji prefixes for visual enhancement
 
 ### 🚀 Developer Experience
 - **Auto-Stage**: Detects and offers to stage all changes automatically
@@ -67,11 +72,12 @@ IMPACT:
 ### 🔧 Customizable
 - **Model Selection**: Override AI model with `-m` flag
 - **Configuration**: Support for project-specific settings
-- **Templates**: Customizable commit message templates
+- **Auto-Update**: Built-in update checker and installer
+- **Cross-Platform**: Windows, macOS, Linux support
 
 ---
 
-## � Installation
+## 📦 Installation
 
 ### Windows
 
@@ -89,11 +95,11 @@ IMPACT:
 ### macOS
 
 ```bash
-# Download and install
+# Intel Macs
 curl -L https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai-darwin-amd64 -o /usr/local/bin/commit-ai
 chmod +x /usr/local/bin/commit-ai
 
-# For Apple Silicon (M1/M2)
+# Apple Silicon (M1/M2/M3)
 curl -L https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai-darwin-arm64 -o /usr/local/bin/commit-ai
 chmod +x /usr/local/bin/commit-ai
 ```
@@ -101,11 +107,11 @@ chmod +x /usr/local/bin/commit-ai
 ### Linux
 
 ```bash
-# Download and install
+# AMD64
 curl -L https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai-linux-amd64 -o ~/.local/bin/commit-ai
 chmod +x ~/.local/bin/commit-ai
 
-# For ARM64
+# ARM64
 curl -L https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai-linux-arm64 -o ~/.local/bin/commit-ai
 chmod +x ~/.local/bin/commit-ai
 ```
@@ -152,16 +158,16 @@ commit-ai -c
 # Generate commit message
 commit-ai
 
-# Generate and commit
+# Generate and commit automatically
 commit-ai -c
 
-# Verbose mode (see details)
+# Verbose mode (see analysis details)
 commit-ai -v
 
 # Add emojis to commit messages
 commit-ai -e
 
-# Skip confirmations
+# Skip confirmation prompts
 commit-ai -y
 
 # Use different AI model
@@ -177,7 +183,7 @@ commit-ai update --check
 commit-ai update
 
 # Combine flags
-commit-ai -cev  # Emoji + Verbose + auto-commit
+commit-ai -cev  # Emoji + Verbose + Auto-commit
 ```
 
 ### Command Flags
@@ -186,7 +192,7 @@ commit-ai -cev  # Emoji + Verbose + auto-commit
 |------|-------|-------------|
 | `--commit` | `-c` | Commit changes after selection |
 | `--yes` | `-y` | Skip confirmation prompts |
-| `--verbose` | `-v` | Show detailed information |
+| `--verbose` | `-v` | Show detailed analysis information |
 | `--emoji` | `-e` | Add emojis to commit messages |
 | `--model` | `-m` | Override AI model |
 | `--help` | `-h` | Show help message |
@@ -201,67 +207,104 @@ commit-ai -cev  # Emoji + Verbose + auto-commit
 | `commit-ai update --check` | Check for updates without installing |
 | `commit-ai update --force` | Force update even if on latest version |
 
-### Workflow Example
-
-```bash
-# 1. Make your changes
-vim src/api/auth.go src/middleware/jwt.go
-
-# 2. Run commit-ai with verbose mode
-commit-ai -v
-
-# Output:
-# [!] Found unstaged changes.
-# ? Stage all changes (git add .)? Yes
-# [✓] All changes staged
-# [Info] Detected scope: api
-# [Info] Analyzing 2 files
-# [Info] Diff size: 1,234 characters
-# [Commit-AI] Analyzing changes with llama-3.1-8b-instant...
-# [Info] Generated 3 options
-
-# 3. Select from AI suggestions
-# ? Select commit title:
-# > feat(api): add JWT authentication system
-#   feat(auth): implement token-based authentication
-#   chore(security): add authentication middleware
-
-# 4. Choose report format
-# ? Commit body:
-# > 📝 Keep AI report
-#   ✏️  Edit report
-#   ⊘  No report
-
-# 5. Review and commit
-# ─────────────────────────────────
-# Title: feat(api): add JWT authentication system
-# Body:
-# FEATURES:
-# - Implemented JWT-based authentication
-# - Added login endpoint with validation
-# - Created middleware for protected routes
-# ─────────────────────────────────
-```
-
 ---
 
 ## 📚 Documentation
 
-### User Guides
-- [Quick Start Guide](docs/QUICK_START.md) - Get started in 5 minutes
-- [Demo & Examples](docs/DEMO.md) - Real-world usage examples
-- [Enhanced Prompts](docs/ENHANCED_PROMPTS.md) - How AI generates messages
+### Getting Started
+- [Installation Guide](docs/INSTALLATION.md) - Detailed setup instructions
+- [Quick Start](docs/QUICK_START.md) - 5-minute setup guide
+- [Configuration](docs/CONFIGURATION.md) - Environment variables and settings
+
+### Usage Guides
+- [Usage Guide](docs/USAGE.md) - Complete usage documentation
+- [Examples](docs/EXAMPLES.md) - Real-world usage examples
+- [Emoji Reference](docs/EMOJI_REFERENCE.md) - Emoji types and usage
 
 ### Developer Guides
-- [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute
-- [Improvements Roadmap](docs/IMPROVEMENTS.md) - Future enhancements
-- [Upgrade Summary](docs/UPGRADE_SUMMARY.md) - Latest changes
+- [Architecture](docs/ARCHITECTURE.md) - Project structure and design
+- [Building from Source](docs/BUILD.md) - Build instructions
+- [Contributing](docs/CONTRIBUTING.md) - Contribution guidelines
+- [Testing](docs/TESTING.md) - Test suite and coverage
 
 ### Reference
 - [Changelog](docs/CHANGELOG.md) - Version history
-- [Supported Files](docs/SUPPORTED_FILES.md) - File types and filtering
-- [Before & After](docs/BEFORE_AFTER.md) - Visual comparisons
-- [Test Report](docs/TEST_REPORT.md) - Test results
+- [Supported Files](docs/SUPPORTED_FILES.md) - File type filtering
+- [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions
+- [FAQ](docs/FAQ.md) - Frequently asked questions
+- [Roadmap](docs/ROADMAP.md) - Future enhancements
+
+---
+
+## 🎨 Examples
+
+### Feature Addition with Emojis
+```
+✨ feat(api): add user authentication endpoints
+
+✨ FEATURES:
+- 🔐 Implemented JWT-based authentication with RS256 signing
+- 🚦 Added login endpoint with rate limiting (5 attempts/minute)
+- 🛡️ Created middleware for protected routes with role-based access
+
+🔒 SECURITY:
+- 🔑 Added secure password hashing with bcrypt
+- 🔄 Implemented token refresh mechanism
+- 🛡️ Configured secure headers (HSTS, CSP)
+
+🔧 TECHNICAL DETAILS:
+- 📊 8 files changed: 450 insertions(+), 20 deletions(-)
+- ✅ Test coverage: 95% on auth module
+- ⚡ Performance: Token validation <1ms average
+
+💡 IMPACT:
+- 🔒 Improved security with industry-standard JWT
+- 🚀 Better user experience with automatic token refresh
+- 📉 Reduced server load with stateless authentication
+```
+
+### Bug Fix
+```
+🐛 fix(cache): resolve memory leak in cleanup method
+
+🐛 BUG FIXES:
+- Fixed memory leak in cache cleanup method
+- Changed cleanup to delete items individually
+- Added proper resource cleanup in defer statements
+
+🔧 TECHNICAL DETAILS:
+- 1 file changed: 15 insertions(+), 8 deletions(-)
+- Memory usage reduced by 40% in long-running tests
+
+💡 IMPACT:
+- Prevents memory leak in production
+- Improves application stability
+- Reduces memory footprint over time
+```
+
+### Refactoring
+```
+♻️ refactor(internal): restructure codebase into modular packages
+
+♻️ ARCHITECTURE:
+- Separated concerns into dedicated modules (config, git, ai)
+- Created clean interfaces between components
+- Improved code organization and maintainability
+
+📈 IMPROVEMENTS:
+- Enhanced testability with dependency injection
+- Reduced coupling between modules
+- Improved code reusability
+
+🔧 TECHNICAL DETAILS:
+- 15 files changed: 800 insertions(+), 300 deletions(-)
+- Test coverage increased from 60% to 85%
+
+💡 IMPACT:
+- Easier to maintain and extend
+- Better code quality and organization
+- Improved developer experience
+```
 
 ---
 
@@ -283,7 +326,7 @@ Create `.commit-ai.yaml` in your project:
 ```yaml
 model: "llama-3.1-8b-instant"
 temperature: 0.7
-max_tokens: 8000
+max_tokens: 15000
 
 rules:
   max_title_length: 72
@@ -301,151 +344,6 @@ scopes:
   aliases:
     frontend: ui
     backend: api
-```
-
----
-
-## 🎨 Examples
-
-### Feature Addition
-```
-feat(api): add user authentication endpoints
-
-FEATURES:
-- Implemented JWT-based authentication with RS256 signing
-- Added login endpoint with rate limiting (5 attempts/minute)
-- Created middleware for protected routes with role-based access
-
-SECURITY:
-- Added secure password hashing with bcrypt
-- Implemented token refresh mechanism
-- Configured secure headers (HSTS, CSP)
-
-TECHNICAL DETAILS:
-- 8 files changed: 450 insertions, 20 deletions
-- Test coverage: 95% on auth module
-- Performance: Token validation <1ms average
-
-IMPACT:
-- Improved security with industry-standard JWT
-- Better user experience with automatic token refresh
-- Reduced server load with stateless authentication
-```
-
-### With Emojis (using -e flag)
-```
-✨ feat(api): add user authentication endpoints
-
-✨ FEATURES:
-- 🔐 Implemented JWT-based authentication with RS256 signing
-- 🚦 Added login endpoint with rate limiting (5 attempts/minute)
-- 🛡️ Created middleware for protected routes with role-based access
-
-🔒 SECURITY:
-- 🔑 Added secure password hashing with bcrypt
-- 🔄 Implemented token refresh mechanism
-- 🛡️ Configured secure headers (HSTS, CSP)
-
-🔧 TECHNICAL DETAILS:
-- 📊 8 files changed: 450 insertions, 20 deletions
-- ✅ Test coverage: 95% on auth module
-- ⚡ Performance: Token validation <1ms average
-
-💡 IMPACT:
-- 🔒 Improved security with industry-standard JWT
-- 🚀 Better user experience with automatic token refresh
-- 📉 Reduced server load with stateless authentication
-```
-
-### Emoji Reference
-When using the `-e` flag, Commit-AI adds contextual emojis:
-
-| Emoji | Type | Usage |
-|-------|------|-------|
-| ✨ | feat | New features |
-| 🐛 | fix | Bug fixes |
-| 📝 | docs | Documentation |
-| ♻️ | refactor | Code refactoring |
-| ⚡ | perf | Performance improvements |
-| 💄 | style | UI/styling changes |
-| ✅ | test | Tests |
-| 🔧 | chore | Maintenance |
-| 🏗️ | build | Build system |
-| 👷 | ci | CI/CD changes |
-| 🔒 | security | Security fixes |
-| 🌐 | i18n | Internationalization |
-| ♿ | a11y | Accessibility |
-
-### Bug Fix
-```
-fix(cache): resolve memory leak in cleanup method
-
-BUG FIXES:
-- Changed cleanup to delete items individually
-- Fixed map reallocation causing memory retention
-- Added proper resource cleanup in defer statements
-
-TECHNICAL DETAILS:
-- 1 file changed: 15 insertions, 8 deletions
-- Memory usage reduced by 40% in long-running tests
-
-IMPACT:
-- Prevents memory leak in production
-- Improves application stability
-- Reduces memory footprint over time
-```
-
-### Refactoring
-```
-refactor(internal): restructure codebase into modular packages
-
-ARCHITECTURE:
-- Separated concerns into dedicated modules (config, git, ai)
-- Created clean interfaces between components
-- Improved code organization and maintainability
-
-IMPROVEMENTS:
-- Enhanced testability with dependency injection
-- Reduced coupling between modules
-- Improved code reusability
-
-TECHNICAL DETAILS:
-- 15 files changed: 800 insertions, 300 deletions
-- Test coverage increased from 60% to 85%
-
-IMPACT:
-- Easier to maintain and extend
-- Better code quality and organization
-- Improved developer experience
-```
-
-### With Breaking Changes
-```
-feat(api): redesign authentication system
-
-BREAKING CHANGES:
-- API endpoint /login now requires POST instead of GET
-- Authentication token format changed from Bearer to JWT
-- Old tokens will be invalidated after migration
-
-FEATURES:
-- Implemented new JWT-based authentication
-- Added refresh token mechanism
-- Enhanced security with RS256 signing
-
-MIGRATION GUIDE:
-- Update API calls from GET to POST
-- Replace Bearer tokens with JWT format
-- Re-authenticate users after deployment
-
-TECHNICAL DETAILS:
-- 12 files changed: 600 insertions, 200 deletions
-- Migration script provided in /scripts
-
-IMPACT:
-- Significantly improved security
-- Better scalability with stateless auth
-- Modern authentication standard
 ```
 
 ---
@@ -473,7 +371,7 @@ make build
 make test
 
 # Run with verbose output
-make run-verbose
+./commit-ai -v
 ```
 
 ### Build Commands
@@ -543,14 +441,17 @@ echo "GROQ_API_KEY=your_key" > .env
 - Upgrade your Groq plan
 - Stage fewer files at once
 
+For more troubleshooting, see [Troubleshooting Guide](docs/TROUBLESHOOTING.md).
+
 ---
 
 ## 📊 Project Stats
 
-- **Language**: Go
+- **Language**: Go 1.21+
 - **AI Model**: Groq Llama 3.1
 - **Test Coverage**: 85%+
 - **Platforms**: Windows, macOS, Linux
+- **Binary Size**: 8-10 MB (optimized)
 - **License**: MIT
 
 ---
