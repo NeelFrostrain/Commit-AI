@@ -37,8 +37,6 @@ OUTPUT FORMAT (STRICT - USE THESE EXACT TAGS):
 3. type(scope): different perspective
 </options>
 <report>
-BREAKING CHANGES: [None/List any breaking changes]
-
 [CATEGORY NAME]:
 - Specific change with technical details
 - Another change with context
@@ -60,14 +58,22 @@ IMPACT:
 - Developer experience improvements
 </report>
 
-EXAMPLE OUTPUT:
+IMPORTANT NOTES:
+- Only include "BREAKING CHANGES:" section if there are actual breaking changes
+- If no breaking changes, do NOT include that section at all
+- Use clear category names like FEATURES, BUG FIXES, IMPROVEMENTS, etc.
+- Keep categories relevant to the actual changes
+
+EXAMPLE OUTPUT (WITH BREAKING CHANGES):
 <options>
 1. feat(api): add user authentication endpoints
 2. feat(auth): implement JWT-based login system
 3. chore(security): add authentication middleware
 </options>
 <report>
-BREAKING CHANGES: None
+BREAKING CHANGES:
+- API endpoint /login now requires POST instead of GET
+- Authentication token format changed from Bearer to JWT
 
 FEATURES:
 - Added JWT authentication with RS256 signing
@@ -81,6 +87,27 @@ TECHNICAL DETAILS:
 IMPACT:
 - Improved security with industry-standard JWT
 - Better user experience with automatic token refresh
+</report>
+
+EXAMPLE OUTPUT (NO BREAKING CHANGES):
+<options>
+1. fix(cache): resolve memory leak in cleanup method
+2. fix(memory): prevent memory retention in cache
+3. chore(cache): improve cleanup implementation
+</options>
+<report>
+BUG FIXES:
+- Fixed memory leak in cache cleanup method
+- Changed cleanup to delete items individually
+- Added proper resource cleanup in defer statements
+
+TECHNICAL DETAILS:
+- 1 file changed: 15 insertions, 8 deletions
+- Memory usage reduced by 40%% in tests
+
+IMPACT:
+- Prevents memory leak in production
+- Improves application stability
 </report>
 
 NOW ANALYZE THIS DIFF:

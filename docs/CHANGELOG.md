@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Module Path**: Updated to `github.com/NeelFrostrain/Commit-Ai`
 - **Documentation Structure**: Cleaned up and reorganized documentation
 - **Build Scripts**: Enhanced with better version information display
+- **AI Prompts**: Improved to only show "BREAKING CHANGES:" when there are actual breaking changes
 
 ### Fixed
 - Character encoding issues in PowerShell build script

@@ -370,6 +370,35 @@ IMPACT:
 - Improved developer experience
 ```
 
+### With Breaking Changes
+```
+feat(api): redesign authentication system
+
+BREAKING CHANGES:
+- API endpoint /login now requires POST instead of GET
+- Authentication token format changed from Bearer to JWT
+- Old tokens will be invalidated after migration
+
+FEATURES:
+- Implemented new JWT-based authentication
+- Added refresh token mechanism
+- Enhanced security with RS256 signing
+
+MIGRATION GUIDE:
+- Update API calls from GET to POST
+- Replace Bearer tokens with JWT format
+- Re-authenticate users after deployment
+
+TECHNICAL DETAILS:
+- 12 files changed: 600 insertions, 200 deletions
+- Migration script provided in /scripts
+
+IMPACT:
+- Significantly improved security
+- Better scalability with stateless auth
+- Modern authentication standard
+```
+
 ---
 
 ## 🛠️ Development
