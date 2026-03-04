@@ -61,60 +61,71 @@ EXAMPLE WITH EMOJIS:
 
 	return fmt.Sprintf(`You are a Principal Engineer analyzing git changes. Generate 3 professional commit message titles and a comprehensive technical report.
 
+CRITICAL INSTRUCTIONS:
+1. You MUST analyze the ACTUAL code changes in the diff below
+2. You MUST use the exact XML-style tags shown below
+3. DO NOT make up features or changes that are not in the diff
+4. DO NOT use generic examples - analyze the REAL changes
+5. Be SPECIFIC about what files changed and what code was added/modified/deleted
+
 CRITICAL: You MUST use the exact XML-style tags shown below. Do not use markdown, do not use any other format.
 %s
 ANALYSIS REQUIREMENTS:
-1. Identify PRIMARY change type and scope from file paths
-2. Analyze WHAT changed, WHY it matters, and the IMPACT
-3. Use imperative mood ("add" not "added")
-4. Keep titles under 72 characters
-5. Provide detailed, structured report
+1. READ THE DIFF CAREFULLY - identify what actually changed
+2. Identify PRIMARY change type and scope from file paths and code changes
+3. Analyze WHAT changed (specific functions, variables, logic)
+4. Explain WHY it matters based on the code context
+5. Use imperative mood ("add" not "added")
+6. Keep titles under 72 characters
+7. Provide detailed, structured report based on ACTUAL changes
 
 CHANGE TYPES:
-- feat: New functionality or capability
-- fix: Bug fixes or error corrections  
-- refactor: Code restructuring without behavior change
-- perf: Performance improvements
-- style: Formatting, whitespace
-- docs: Documentation only
-- test: Adding/updating tests
-- chore: Build, dependencies, tooling
-- build: Build system changes
-- ci: CI/CD changes
+- feat: New functionality or capability (new functions, endpoints, features)
+- fix: Bug fixes or error corrections (fixing logic, handling errors)
+- refactor: Code restructuring without behavior change (renaming, reorganizing)
+- perf: Performance improvements (optimization, caching)
+- style: Formatting, whitespace (code style only)
+- docs: Documentation only (comments, README, docs)
+- test: Adding/updating tests (test files, test cases)
+- chore: Build, dependencies, tooling (package.json, go.mod, config)
+- build: Build system changes (Makefile, build scripts)
+- ci: CI/CD changes (GitHub Actions, CI config)
 
 OUTPUT FORMAT (STRICT - USE THESE EXACT TAGS):
 <options>
-1. type(scope): concise description
-2. type(scope): alternative description  
-3. type(scope): different perspective
+1. type(scope): concise description of ACTUAL change
+2. type(scope): alternative description of ACTUAL change
+3. type(scope): different perspective on ACTUAL change
 </options>
 <report>
 [CATEGORY NAME]:
-- Specific change with technical details
-- Another change with context
-- Impact or reasoning
+- Specific change with technical details FROM THE DIFF
+- Another change with context FROM THE DIFF
+- Impact or reasoning based on ACTUAL code
 
 [ANOTHER CATEGORY]:
-- Detailed technical change
-- Implementation specifics
-- Benefits or improvements
+- Detailed technical change FROM THE DIFF
+- Implementation specifics FROM THE DIFF
+- Benefits or improvements based on ACTUAL changes
 
 TECHNICAL DETAILS:
-- Files changed statistics
-- Key metrics or measurements
-- Test results if applicable
+- Files changed statistics (count from diff)
+- Key metrics or measurements FROM THE DIFF
+- Test results if applicable FROM THE DIFF
 
 IMPACT:
-- Performance improvements
-- User experience enhancements
-- Developer experience improvements
+- Performance improvements (if evident from code)
+- User experience enhancements (if evident from code)
+- Developer experience improvements (if evident from code)
 </report>
 
 IMPORTANT NOTES:
-- Only include "BREAKING CHANGES:" section if there are actual breaking changes
+- Only include "BREAKING CHANGES:" section if there are actual breaking changes in the diff
 - If no breaking changes, do NOT include that section at all
 - Use clear category names like FEATURES, BUG FIXES, IMPROVEMENTS, etc.
-- Keep categories relevant to the actual changes
+- Keep categories relevant to the ACTUAL changes in the diff
+- DO NOT invent features or changes that are not in the diff
+- BE SPECIFIC about function names, variable names, file names from the diff
 
 EXAMPLE OUTPUT (NO BREAKING CHANGES):
 <options>
@@ -137,7 +148,7 @@ IMPACT:
 - Improves application stability
 </report>
 %s
-NOW ANALYZE THIS DIFF:
+NOW ANALYZE THIS DIFF CAREFULLY AND DESCRIBE ONLY WHAT YOU SEE:
 %s`, emojiInstructions, emojiExamples, diff)
 }
 

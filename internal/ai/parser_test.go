@@ -119,7 +119,7 @@ func TestParseMultiResponseWithInvalidFormat(t *testing.T) {
 func TestBuildPrompt(t *testing.T) {
 	diff := "diff --git a/file.go b/file.go\n+func newFunction() {}"
 
-	prompt := BuildPrompt(diff)
+	prompt := BuildPrompt(diff, false)
 
 	// Check that prompt contains key instructions
 	requiredPhrases := []string{

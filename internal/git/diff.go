@@ -63,18 +63,23 @@ func GetStagedDiff(excludePatterns []string, maxSize int) (string, error) {
 		return "No text files to analyze (only binary files staged)", nil
 	}
 
-	// Combine exclude patterns
-	allExcludes := append(excludePatterns, binaryPatterns...)
-
-	// Get summary stats
-	diffArgs := append([]string{"diff", "--cached", "--stat", "--"}, allExcludes...)
+	// Get summary stats for text files only
+	diffArgs := []string{"diff", "--cached", "--stat"}
+	if len(excludePatterns) > 0 {
+		diffArgs = append(diffArgs, "--")
+		diffArgs = append(diffArgs, excludePatterns...)
+	}
 	stats, err := exec.Command("git", diffArgs...).Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get diff stats: %w", err)
 	}
 
-	// Get actual code changes with reduced context
-	diffArgs = append([]string{"diff", "--cached", "-U2", "--"}, allExcludes...)
+	// Get actual code changes with reduced context for text files only
+	diffArgs = []string{"diff", "--cached", "-U2"}
+	if len(excludePatterns) > 0 {
+		diffArgs = append(diffArgs, "--")
+		diffArgs = append(diffArgs, excludePatterns...)
+	}
 	diff, err := exec.Command("git", diffArgs...).Output()
 	if err != nil {
 		return "", fmt.Errorf("failed to get diff: %w", err)
