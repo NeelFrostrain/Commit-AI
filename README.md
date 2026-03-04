@@ -158,6 +158,9 @@ commit-ai -c
 # Verbose mode (see details)
 commit-ai -v
 
+# Add emojis to commit messages
+commit-ai -e
+
 # Skip confirmations
 commit-ai -y
 
@@ -174,7 +177,7 @@ commit-ai update --check
 commit-ai update
 
 # Combine flags
-commit-ai -cv  # Verbose + auto-commit
+commit-ai -cev  # Emoji + Verbose + auto-commit
 ```
 
 ### Command Flags
@@ -184,6 +187,7 @@ commit-ai -cv  # Verbose + auto-commit
 | `--commit` | `-c` | Commit changes after selection |
 | `--yes` | `-y` | Skip confirmation prompts |
 | `--verbose` | `-v` | Show detailed information |
+| `--emoji` | `-e` | Add emojis to commit messages |
 | `--model` | `-m` | Override AI model |
 | `--help` | `-h` | Show help message |
 
@@ -327,6 +331,50 @@ IMPACT:
 - Better user experience with automatic token refresh
 - Reduced server load with stateless authentication
 ```
+
+### With Emojis (using -e flag)
+```
+✨ feat(api): add user authentication endpoints
+
+✨ FEATURES:
+- 🔐 Implemented JWT-based authentication with RS256 signing
+- 🚦 Added login endpoint with rate limiting (5 attempts/minute)
+- 🛡️ Created middleware for protected routes with role-based access
+
+🔒 SECURITY:
+- 🔑 Added secure password hashing with bcrypt
+- 🔄 Implemented token refresh mechanism
+- 🛡️ Configured secure headers (HSTS, CSP)
+
+🔧 TECHNICAL DETAILS:
+- 📊 8 files changed: 450 insertions, 20 deletions
+- ✅ Test coverage: 95% on auth module
+- ⚡ Performance: Token validation <1ms average
+
+💡 IMPACT:
+- 🔒 Improved security with industry-standard JWT
+- 🚀 Better user experience with automatic token refresh
+- 📉 Reduced server load with stateless authentication
+```
+
+### Emoji Reference
+When using the `-e` flag, Commit-AI adds contextual emojis:
+
+| Emoji | Type | Usage |
+|-------|------|-------|
+| ✨ | feat | New features |
+| 🐛 | fix | Bug fixes |
+| 📝 | docs | Documentation |
+| ♻️ | refactor | Code refactoring |
+| ⚡ | perf | Performance improvements |
+| 💄 | style | UI/styling changes |
+| ✅ | test | Tests |
+| 🔧 | chore | Maintenance |
+| 🏗️ | build | Build system |
+| 👷 | ci | CI/CD changes |
+| 🔒 | security | Security fixes |
+| 🌐 | i18n | Internationalization |
+| ♿ | a11y | Accessibility |
 
 ### Bug Fix
 ```

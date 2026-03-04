@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Comprehensive Documentation**: Organized docs with build and release guides
 - **Production Binaries**: Pre-built binaries in `bin/` folder for releases
 - **Binary File Filtering**: Added `.gitattributes` to mark binary files and prevent AI analysis
+- **Emoji Support**: New `-e/--emoji` flag to add emojis to commit messages and body
+  - 13+ emoji types for different commit categories
+  - Enhanced visual hierarchy in commit messages
+  - Contextual emojis for features, bugs, docs, security, etc.
 
 ### Changed
 - **Project Rename**: Changed from `Commit-Ai-Go` to `Commit-Ai`
