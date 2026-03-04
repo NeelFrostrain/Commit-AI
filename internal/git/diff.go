@@ -66,6 +66,22 @@ func HasStagedChanges() (bool, error) {
 	return len(strings.TrimSpace(string(out))) > 0, nil
 }
 
+// HasUnstagedChanges checks if there are any unstaged changes
+func HasUnstagedChanges() (bool, error) {
+	out, err := exec.Command("git", "diff", "--name-only").Output()
+	if err != nil {
+		return false, err
+	}
+
+	// Also check for untracked files
+	untracked, err := exec.Command("git", "ls-files", "--others", "--exclude-standard").Output()
+	if err != nil {
+		return false, err
+	}
+
+	return len(strings.TrimSpace(string(out))) > 0 || len(strings.TrimSpace(string(untracked))) > 0, nil
+}
+
 // StageAllFiles stages all changes
 func StageAllFiles() error {
 	return exec.Command("git", "add", ".").Run()

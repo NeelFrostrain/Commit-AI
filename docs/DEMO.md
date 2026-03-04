@@ -484,7 +484,7 @@ Use Commit-AI regularly and you'll learn:
 
 ```bash
 # Install
-go install github.com/NeelFrostrain/Commit-Ai-Go@latest
+go install github.com/NeelFrostrain/Commit-Ai@latest
 
 # Set up API key
 commit-ai

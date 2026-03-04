@@ -9,6 +9,8 @@ import (
 func BuildPrompt(diff string) string {
 	return fmt.Sprintf(`You are a Principal Engineer analyzing git changes. Generate 3 professional commit message titles and a comprehensive technical report.
 
+CRITICAL: You MUST use the exact XML-style tags shown below. Do not use markdown, do not use any other format.
+
 ANALYSIS REQUIREMENTS:
 1. Identify PRIMARY change type and scope from file paths
 2. Analyze WHAT changed, WHY it matters, and the IMPACT
@@ -28,7 +30,7 @@ CHANGE TYPES:
 - build: Build system changes
 - ci: CI/CD changes
 
-OUTPUT FORMAT (STRICT):
+OUTPUT FORMAT (STRICT - USE THESE EXACT TAGS):
 <options>
 1. type(scope): concise description
 2. type(scope): alternative description  
@@ -58,17 +60,30 @@ IMPACT:
 - Developer experience improvements
 </report>
 
-REPORT STRUCTURE GUIDELINES:
-- Group related changes into logical categories (e.g., ARCHITECTURE, FEATURES, BUG FIXES, PERFORMANCE)
-- Use ALL CAPS for category headers
-- Provide specific technical details, not generic statements
-- Include metrics, file counts, or measurements when relevant
-- Explain the "why" and impact, not just the "what"
-- For large changes, use categories like: ARCHITECTURE, FEATURES, TESTING, DOCUMENTATION, BUG FIXES, PERFORMANCE, CONFIGURATION
-- For small changes, use 2-3 focused categories
-- Always end with IMPACT section showing benefits
+EXAMPLE OUTPUT:
+<options>
+1. feat(api): add user authentication endpoints
+2. feat(auth): implement JWT-based login system
+3. chore(security): add authentication middleware
+</options>
+<report>
+BREAKING CHANGES: None
 
-DIFF ANALYSIS:
+FEATURES:
+- Added JWT authentication with RS256 signing
+- Implemented login endpoint with rate limiting
+- Created middleware for protected routes
+
+TECHNICAL DETAILS:
+- 5 files changed: 250 insertions, 10 deletions
+- Test coverage: 90%%
+
+IMPACT:
+- Improved security with industry-standard JWT
+- Better user experience with automatic token refresh
+</report>
+
+NOW ANALYZE THIS DIFF:
 %s`, diff)
 }
 

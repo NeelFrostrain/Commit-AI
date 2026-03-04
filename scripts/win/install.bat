@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 :: 1. Configuration
-set "REPO_URL=https://github.com/NeelFrostrain/Commit-Ai-Go/releases/latest/download/commit-ai.exe"
+set "REPO_URL=https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai.exe"
 set "INSTALL_DIR=%LOCALAPPDATA%\CommitAI"
 set "EXE_PATH=%INSTALL_DIR%\commit-ai.exe"
 

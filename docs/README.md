@@ -1,106 +1,118 @@
 # 📚 Commit-AI Documentation
 
-Welcome to the Commit-AI documentation! This folder contains comprehensive guides, examples, and references.
+Complete documentation for Commit-AI - the AI-powered Git commit message generator.
 
 ---
 
 ## 🚀 Getting Started
 
-### New Users
-- **[Quick Start Guide](QUICK_START.md)** - Get up and running in 5 minutes
-- **[Demo & Examples](DEMO.md)** - See real-world usage examples
+New to Commit-AI? Start here:
 
-### Contributors
-- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
-- **[Improvements & Roadmap](IMPROVEMENTS.md)** - Future enhancements and ideas
+1. **[Quick Start Guide](QUICK_START.md)** - Get up and running in 5 minutes
+2. **[Demo & Examples](DEMO.md)** - See real-world usage examples
 
 ---
 
-## 📖 Documentation Index
+## 📖 Documentation
 
-### User Guides
+### For Users
+
 | Document | Description |
 |----------|-------------|
-| [Quick Start](QUICK_START.md) | 5-minute setup and usage guide |
-| [Demo](DEMO.md) | Real-world examples and scenarios |
-| [Enhanced Prompts](ENHANCED_PROMPTS.md) | How the AI generates comprehensive messages |
+| [Quick Start](QUICK_START.md) | Installation and first-time setup |
+| [Demo](DEMO.md) | Real-world examples and use cases |
+| [Enhanced Prompts](ENHANCED_PROMPTS.md) | How AI generates commit messages |
 
-### Developer Guides
+### For Developers
+
 | Document | Description |
 |----------|-------------|
-| [Contributing](CONTRIBUTING.md) | Contribution guidelines and workflow |
-| [Improvements](IMPROVEMENTS.md) | 50+ future enhancement ideas |
-| [Upgrade Summary](UPGRADE_SUMMARY.md) | Latest version improvements |
+| [Contributing Guide](CONTRIBUTING.md) | How to contribute to the project |
+| [Build Guide](BUILD_GUIDE.md) | Building from source |
+| [Release Checklist](RELEASE_CHECKLIST.md) | Creating releases |
+| [Test Report](TEST_REPORT.md) | Test coverage and results |
 
 ### Reference
+
 | Document | Description |
 |----------|-------------|
 | [Changelog](CHANGELOG.md) | Version history and changes |
-| [Before & After](BEFORE_AFTER.md) | Visual comparison of improvements |
-| [Test Report](TEST_REPORT.md) | Comprehensive test results |
-| [Test Results](TEST_RESULTS_FINAL.md) | Final test verification |
-
-### Planning
-| Document | Description |
-|----------|-------------|
-| [TODO](TODO.md) | Action items and next steps |
-| [Commit Guide](COMMIT_GUIDE.md) | How to commit this upgrade |
-| [Final Summary](FINAL_SUMMARY.md) | Complete upgrade overview |
+| [Improvements](IMPROVEMENTS.md) | Future enhancements roadmap |
+| [TODO](TODO.md) | Current action items |
 
 ---
 
-## 🎯 Quick Links
+## 🎯 Quick Navigation
 
 ### I want to...
 
-**...get started quickly**
-→ Read [Quick Start Guide](QUICK_START.md)
+**...install Commit-AI**
+→ [Quick Start Guide](QUICK_START.md#installation)
 
 **...see examples**
-→ Check out [Demo](DEMO.md)
+→ [Demo](DEMO.md)
 
-**...contribute**
-→ Follow [Contributing Guide](CONTRIBUTING.md)
+**...contribute code**
+→ [Contributing Guide](CONTRIBUTING.md)
 
-**...understand what changed**
-→ See [Upgrade Summary](UPGRADE_SUMMARY.md)
+**...build from source**
+→ [Build Guide](BUILD_GUIDE.md)
 
-**...know what's next**
-→ Review [Improvements](IMPROVEMENTS.md)
+**...create a release**
+→ [Release Checklist](RELEASE_CHECKLIST.md)
 
-**...see test results**
-→ View [Test Report](TEST_REPORT.md)
+**...understand the AI**
+→ [Enhanced Prompts](ENHANCED_PROMPTS.md)
 
----
-
-## 📊 Documentation Stats
-
-- **13 documentation files**
-- **~10,000 lines** of documentation
-- **50+ enhancement ideas**
-- **100% test coverage** documented
-- **Real-world examples** included
+**...see what's next**
+→ [Improvements](IMPROVEMENTS.md)
 
 ---
 
-## 🔄 Documentation Updates
+## 📊 Project Stats
 
-This documentation is maintained alongside the codebase. When contributing:
+- **Version**: v1.2.0
+- **Language**: Go 1.21+
+- **AI Model**: Groq Llama 3.1
+- **Test Coverage**: 85%+
+- **Platforms**: Windows, macOS, Linux
+- **License**: MIT
 
-1. Update relevant docs when changing features
-2. Add examples for new functionality
-3. Keep the changelog up to date
-4. Update test reports after testing
+---
+
+## 🔗 External Links
+
+- **GitHub Repository**: https://github.com/NeelFrostrain/Commit-Ai
+- **Issue Tracker**: https://github.com/NeelFrostrain/Commit-Ai/issues
+- **Releases**: https://github.com/NeelFrostrain/Commit-Ai/releases
+- **Groq Console**: https://console.groq.com/keys
 
 ---
 
 ## 💡 Need Help?
 
-- 📖 Start with [Quick Start Guide](QUICK_START.md)
-- 🐛 Check [Test Report](TEST_REPORT.md) for troubleshooting
-- 💬 Open an issue on GitHub
-- 🤝 Join discussions
+1. Check the [Quick Start Guide](QUICK_START.md)
+2. Browse [Demo Examples](DEMO.md)
+3. Review [Test Report](TEST_REPORT.md) for troubleshooting
+4. Open an issue on [GitHub](https://github.com/NeelFrostrain/Commit-Ai/issues)
 
 ---
 
-**Happy coding!** 🚀
+## 🤝 Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for:
+
+- Code contribution guidelines
+- Development workflow
+- Testing requirements
+- Pull request process
+
+---
+
+<div align="center">
+
+**Made with ❤️ by developers, for developers**
+
+[⭐ Star us on GitHub](https://github.com/NeelFrostrain/Commit-Ai)
+
+</div>

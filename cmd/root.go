@@ -1,108 +1,29 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"os"
 	"os/exec"
-<<<<<<< Updated upstream
-	"path/filepath"
-	"strings"
-=======
->>>>>>> Stashed changes
+	"runtime"
 
-	"github.com/NeelFrostrain/Commit-Ai-Go/internal/ai"
-	"github.com/NeelFrostrain/Commit-Ai-Go/internal/config"
-	"github.com/NeelFrostrain/Commit-Ai-Go/internal/git"
+	"github.com/NeelFrostrain/Commit-Ai/internal/ai"
+	"github.com/NeelFrostrain/Commit-Ai/internal/config"
+	"github.com/NeelFrostrain/Commit-Ai/internal/git"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/algolyzer/groq-go"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
 var (
-<<<<<<< Updated upstream
-	commitFlag bool
-	yesFlag    bool
-	magenta    = color.New(color.FgMagenta, color.Bold).SprintFunc()
-	blue       = color.New(color.FgBlue).SprintFunc()
-	red        = color.New(color.FgRed, color.Bold).SprintFunc()
-	cyan       = color.New(color.FgCyan).SprintFunc()
-)
-
-var rootCmd = &cobra.Command{
-	Use:     "commit-ai",
-	Short:   "AI-powered git analysis and auto-committer",
-	Version: "1.1.0",
-	Run:     runCommitAI,
-}
-
-func init() {
-	rootCmd.Flags().BoolVarP(&commitFlag, "commit", "c", false, "enable commit mode")
-	rootCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "skip confirmation prompt")
-}
-
-func runCommitAI(cmd *cobra.Command, args []string) {
-	_ = godotenv.Load()
-
-	apiKey := getAPIKey()
-	if apiKey == "" {
-		fmt.Printf("%s %s: GROQ_API_KEY is missing. Please set it and restart your terminal.\n", magenta("[Commit-AI]"), red("[Error]"))
-		os.Exit(1)
-	}
-
-	fmt.Printf("%s %s: Analyzing modified files...\n", magenta("[Commit-AI]"), blue("[Info]"))
-	exec.Command("git", "add", ".").Run()
-
-	excludePatterns := git.GetIgnorePatterns()
-	diffArgs := append([]string{"diff", "--cached", "--", "."}, excludePatterns...)
-	out, _ := exec.Command("git", diffArgs...).Output()
-	diff := string(out)
-
-	if strings.TrimSpace(diff) == "" {
-		fmt.Printf("%s %s: No changes detected.\n", magenta("[Commit-AI]"), color.GreenString("[Success]"))
-		return
-	}
-
-	client := groq.NewClient(apiKey)
-	temp := 0.7
-	prompt := fmt.Sprintf(`Analyze this Git diff and provide a professional report.
-    1. Provide a bulleted "REPORT" of technical changes.
-    2. Provide a single-line "COMMIT_MESSAGE" (type: description).
-    STRICT FORMAT:
-    <report>* bullet points</report>
-    <message>type: description</message>
-    Diff: %s`, diff)
-
-	resp, err := client.CreateChatCompletion(context.Background(), groq.ChatCompletionRequest{
-		Model: "llama-3.1-8b-instant",
-		Messages: []groq.ChatMessage{
-			{Role: groq.RoleSystem, Content: "You are commit-ai. Follow tags strictly."},
-			{Role: groq.RoleUser, Content: prompt},
-		},
-		Temperature: &temp,
-	})
-
-	if err != nil {
-		fmt.Printf("AI failure: %v\n", err)
-		return
-	}
-
-	title, report := ai.ParseResponse(resp.Choices[0].Message.Content)
-
-	fmt.Printf("\n%s\nREPORT:\n%s\n\nCOMMIT_MESSAGE: %s\n%s\n\n", red("─── AI SUGGESTION ───"), report, title, red("─────────────────────"))
-
-	if commitFlag {
-		if yesFlag || confirm() {
-			exec.Command("git", "commit", "-m", title, "-m", report).Run()
-			fmt.Println("Committed!")
-=======
 	magenta = color.New(color.FgMagenta, color.Bold).SprintFunc()
 	blue    = color.New(color.FgBlue).SprintFunc()
 	red     = color.New(color.FgRed, color.Bold).SprintFunc()
 	yellow  = color.New(color.FgYellow).SprintFunc()
 	green   = color.New(color.FgGreen, color.Bold).SprintFunc()
+	cyan    = color.New(color.FgCyan, color.Bold).SprintFunc()
 )
 
 var (
@@ -110,6 +31,12 @@ var (
 	yesFlag     bool
 	verboseFlag bool
 	modelFlag   string
+)
+
+var (
+	version   = "dev"
+	buildDate = "unknown"
+	gitCommit = "unknown"
 )
 
 var rootCmd = &cobra.Command{
@@ -121,11 +48,34 @@ git history with minimal effort.`,
 	Run: runCommitAI,
 }
 
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version information",
+	Long:  "Display detailed version information including build date and git commit",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("%s\n", cyan("Commit-AI"))
+		fmt.Printf("  Version:    %s\n", version)
+		fmt.Printf("  Build Date: %s\n", buildDate)
+		fmt.Printf("  Git Commit: %s\n", gitCommit)
+		fmt.Printf("  Go Version: %s\n", runtime.Version())
+		fmt.Printf("  OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
+	},
+}
+
+// SetVersion sets version information from main package
+func SetVersion(v, date, commit string) {
+	version = v
+	buildDate = date
+	gitCommit = commit
+	rootCmd.Version = v
+}
+
 func Execute() error {
 	return rootCmd.Execute()
 }
 
 func init() {
+	rootCmd.AddCommand(versionCmd)
 	rootCmd.Flags().BoolVarP(&commitFlag, "commit", "c", false, "Commit changes after selection")
 	rootCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "Skip confirmation prompts")
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show detailed information")
@@ -152,7 +102,7 @@ func runCommitAI(cmd *cobra.Command, args []string) {
 		}
 
 		fmt.Printf("%s API key saved to ~/.commit-ai.env\n", green("[Success]"))
-		cfg = &config.Config{APIKey: apiKey, Model: "llama-3.1-8b-instant", Temperature: 0.6, MaxTokens: 12000}
+		cfg = &config.Config{APIKey: apiKey, Model: "llama-3.1-8b-instant", Temperature: 0.7, MaxTokens: 15000}
 	}
 
 	// Override model if flag is set
@@ -160,41 +110,67 @@ func runCommitAI(cmd *cobra.Command, args []string) {
 		cfg.Model = modelFlag
 	}
 
-	// Check for staged changes
+	// Check for ANY changes (staged or unstaged)
 	hasStaged, err := git.HasStagedChanges()
 	if err != nil {
 		fmt.Printf("%s Failed to check staged changes: %v\n", red("[Error]"), err)
 		return
 	}
 
-	if !hasStaged {
-		fmt.Printf("%s No staged changes detected.\n", yellow("[!]"))
+	hasUnstaged, err := git.HasUnstagedChanges()
+	if err != nil {
+		fmt.Printf("%s Failed to check unstaged changes: %v\n", red("[Error]"), err)
+		return
+	}
+
+	if !hasStaged && !hasUnstaged {
+		fmt.Printf("%s No changes detected in repository.\n", yellow("[!]"))
+		return
+	}
+
+	// If there are unstaged changes, offer to stage them
+	if hasUnstaged {
 		if !yesFlag {
+			fmt.Printf("%s Found unstaged changes.\n", yellow("[!]"))
 			var confirm bool
-			survey.AskOne(&survey.Confirm{Message: "Stage all files and continue?"}, &confirm)
+			survey.AskOne(&survey.Confirm{Message: "Stage all changes (git add .)?"}, &confirm)
 			if !confirm {
+				if !hasStaged {
+					fmt.Printf("%s No staged changes to commit.\n", yellow("[!]"))
+					return
+				}
+				fmt.Printf("%s Proceeding with only staged changes...\n", blue("[Info]"))
+			} else {
+				if err := git.StageAllFiles(); err != nil {
+					fmt.Printf("%s Failed to stage files: %v\n", red("[Error]"), err)
+					return
+				}
+				fmt.Printf("%s All changes staged\n", green("[✓]"))
+			}
+		} else {
+			// Auto-stage in yes mode
+			if err := git.StageAllFiles(); err != nil {
+				fmt.Printf("%s Failed to stage files: %v\n", red("[Error]"), err)
 				return
 			}
+			fmt.Printf("%s All changes staged\n", green("[✓]"))
 		}
-
-		if err := git.StageAllFiles(); err != nil {
-			fmt.Printf("%s Failed to stage files: %v\n", red("[Error]"), err)
-			return
-		}
-		fmt.Printf("%s All files staged\n", green("[✓]"))
 	}
 
 	// Get staged files for scope suggestion
 	stagedFiles, _ := git.GetStagedFiles()
 	suggestedScope := ai.SuggestScope(stagedFiles)
 
-	if verboseFlag && suggestedScope != "" {
-		fmt.Printf("%s Detected scope: %s\n", blue("[Info]"), suggestedScope)
+	if verboseFlag {
+		if suggestedScope != "" {
+			fmt.Printf("%s Detected scope: %s\n", blue("[Info]"), suggestedScope)
+		}
+		fmt.Printf("%s Analyzing %d files\n", blue("[Info]"), len(stagedFiles))
 	}
 
 	// Get optimized diff
 	exclude := git.GetIgnorePatterns()
-	fullContext, err := git.GetStagedDiff(exclude, 15000) // Increased for comprehensive analysis
+	fullContext, err := git.GetStagedDiff(exclude, 8000) // Reduced for API limits
 	if err != nil {
 		fmt.Printf("%s Failed to get diff: %v\n", red("[Error]"), err)
 		return
@@ -251,10 +227,20 @@ Your commit messages should be:
 	}
 
 	// Parse AI response
-	options, aiReport := ai.ParseMultiResponse(resp.Choices[0].Message.Content)
+	rawResponse := resp.Choices[0].Message.Content
+	options, aiReport := ai.ParseMultiResponse(rawResponse)
 
 	if verboseFlag {
 		fmt.Printf("%s Generated %d options\n", blue("[Info]"), len(options))
+		// Debug: Show if AI didn't follow format
+		if len(options) == 1 && options[0] == "chore: update project" {
+			fmt.Printf("%s AI didn't follow format. First 300 chars of response:\n", yellow("[Debug]"))
+			maxLen := 300
+			if len(rawResponse) < maxLen {
+				maxLen = len(rawResponse)
+			}
+			fmt.Printf("%s\n", rawResponse[:maxLen])
+		}
 	}
 
 	// Validate options
@@ -354,63 +340,8 @@ Your commit messages should be:
 			}
 
 			fmt.Printf("\n%s Commit created successfully!\n", green("✔"))
->>>>>>> Stashed changes
 		}
 	} else {
 		fmt.Printf("\n%s Use -c flag to commit automatically\n", yellow("[Hint]"))
 	}
 }
-<<<<<<< Updated upstream
-
-func getAPIKey() string {
-	// 1. Check current terminal session environment
-	key := os.Getenv("GROQ_API_KEY")
-	if key != "" {
-		return key
-	}
-
-	// 2. Check the hidden file in Home directory (~/.commit-ai-key)
-	home, _ := os.UserHomeDir()
-	keyFile := filepath.Join(home, ".commit-ai-key") // Use filepath for Windows compatibility
-	data, err := os.ReadFile(keyFile)
-	if err == nil && len(strings.TrimSpace(string(data))) > 0 {
-		return strings.TrimSpace(string(data))
-	}
-
-	// 3. First-time setup: Ask user and save it
-	fmt.Println(color.YellowString("\n[Setup] No GROQ_API_KEY found."))
-	fmt.Println("You can get one at: https://console.groq.com/keys")
-	fmt.Print("Paste your API Key here: ")
-
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	input = strings.TrimSpace(input)
-
-	if input != "" {
-		// Save to file as backup
-		_ = os.WriteFile(keyFile, []byte(input), 0600)
-
-		// Try to set it permanently in Windows Registry so other terminals see it
-		// This is the Go version of 'setx'
-		_ = exec.Command("setx", "GROQ_API_KEY", input).Run()
-
-		fmt.Println(color.GreenString("✔ Key saved!"))
-		fmt.Println(color.CyanString("NOTE: Please close this terminal and open a NEW one for changes to take effect.\n"))
-		return input
-	}
-
-	return ""
-}
-
-func confirm() bool {
-	fmt.Printf("%s %s: Use this commit message? (y/n): ", magenta("[Commit-AI]"), color.YellowString("[Prompt]"))
-	r := bufio.NewReader(os.Stdin)
-	i, _ := r.ReadString('\n')
-	return strings.TrimSpace(strings.ToLower(i)) == "y"
-}
-
-func Execute() {
-	rootCmd.Execute()
-}
-=======
->>>>>>> Stashed changes

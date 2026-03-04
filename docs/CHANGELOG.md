@@ -5,48 +5,115 @@ All notable changes to Commit-AI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+---
+
+## [1.2.0] - 2024-12-XX
 
 ### Added
-- **Smart Scope Detection**: Automatically detects scope from file paths (e.g., `api`, `ui`, `auth`)
-- **Commit Message Validation**: Validates generated messages against Conventional Commits format
-- **Verbose Mode**: `-v` flag for detailed operation information
-- **Model Selection**: `-m` flag to override AI model
-- **Configuration Module**: Centralized configuration management with support for custom settings
-- **Git Operations Module**: Dedicated module for git operations with better error handling
-- **Enhanced AI Prompts**: Improved prompt engineering for better, more accurate commit messages
-- **Interactive API Key Setup**: Guided setup flow when API key is missing
-- **Comprehensive Tests**: Unit tests for AI parsing, validation, and scope detection
-- **Development Tools**: Makefile for common development tasks
-- **CI/CD Pipeline**: GitHub Actions workflow for automated testing and building
-- **Documentation**: 
-  - IMPROVEMENTS.md with detailed enhancement suggestions
-  - CONTRIBUTING.md for contributors
-  - QUICK_START.md for new users
-  - Example configuration file (.commit-ai.example.yaml)
+- **Version Command**: New `commit-ai version` command showing detailed build info
+- **Enhanced Versioning**: Build date and git commit embedded in binaries
+- **Better Build System**: Improved build scripts with version tracking
+- **Comprehensive Documentation**: Organized docs with build and release guides
+- **Production Binaries**: Pre-built binaries in `bin/` folder for releases
 
 ### Changed
-- **Better Error Messages**: More specific error handling with helpful hints
-- **Improved User Experience**: Enhanced visual feedback with emojis and better formatting
-- **Optimized Diff Handling**: Better token management and diff truncation
-- **Enhanced Parsing**: More robust AI response parsing with fallbacks
+- **Project Rename**: Changed from `Commit-Ai-Go` to `Commit-Ai`
+- **Module Path**: Updated to `github.com/NeelFrostrain/Commit-Ai`
+- **Documentation Structure**: Cleaned up and reorganized documentation
+- **Build Scripts**: Enhanced with better version information display
 
 ### Fixed
-- Better handling of edge cases in commit message parsing
-- Improved validation logic for conventional commit format
+- Character encoding issues in PowerShell build script
+- Module import paths throughout the codebase
 
-## [1.1.0] - Previous Release
+### Removed
+- Temporary documentation files (summaries, reports)
+- Redundant upgrade and test result files
+
+---
+
+## [1.1.0] - 2024-11-XX
+
+### Added
+- **Auto-Stage Changes**: Automatically detect and offer to stage all changes
+- **Verbose Mode**: `-v` flag for detailed analysis information
+- **Model Override**: `-m` flag to use different AI models
+- **Scope Detection**: Automatic scope detection from file paths
+- **Enhanced AI Prompts**: Improved prompt engineering for better commit messages
+- **Comprehensive Testing**: 85%+ test coverage on core modules
+- **CI/CD Pipeline**: GitHub Actions for automated testing
+- **Multi-Platform Builds**: Support for Windows, Linux, macOS (amd64, arm64)
+
+### Changed
+- **Modular Architecture**: Restructured into `config`, `git`, and `ai` packages
+- **Improved Error Handling**: Better error messages with helpful hints
+- **Optimized Diff Size**: Reduced to 8,000 chars to avoid API limits
+- **Better User Experience**: Interactive prompts with emojis and colors
+
+### Fixed
+- Memory leak in cleanup method
+- Edge cases in AI response parsing
+- Nil pointer issues in git operations
+- Invalid commit message format validation
+
+---
+
+## [1.0.0] - 2024-10-XX
+
+### Added
+- Initial release of Commit-AI
+- AI-powered commit message generation using Groq
+- Conventional Commits format support
+- Interactive commit message selection
+- Basic configuration support
+- Environment variable configuration
+- Git integration for staged changes
 
 ### Features
-- AI-powered commit message generation
-- Support for Conventional Commits format
-- Interactive selection of commit messages
-- Technical report generation
-- Global API key configuration
-- Git diff analysis with ignore patterns
+- Generate 3 commit message options
+- Structured commit bodies with categories
+- Support for `.env` configuration
+- Cross-platform support (Windows, Linux, macOS)
+
+---
+
+## Version History
+
+- **v1.2.0** - Enhanced versioning and documentation
+- **v1.1.0** - Major architecture overhaul with testing
+- **v1.0.0** - Initial release
+
+---
+
+## Upgrade Guide
+
+### From v1.1.0 to v1.2.0
+
+No breaking changes. Simply download the new version:
+
+```bash
+# Windows
+# Download new install-commit-ai.exe and run
+
+# macOS/Linux
+curl -L https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai-[platform]-[arch] -o commit-ai
+chmod +x commit-ai
+```
+
+### From v1.0.0 to v1.1.0
+
+No breaking changes. Configuration files remain compatible.
 
 ---
 
 ## Future Releases
 
 See [IMPROVEMENTS.md](IMPROVEMENTS.md) for planned features and enhancements.
+
+---
+
+## Links
+
+- [GitHub Releases](https://github.com/NeelFrostrain/Commit-Ai/releases)
+- [Contributing Guide](CONTRIBUTING.md)
+- [Build Guide](BUILD_GUIDE.md)

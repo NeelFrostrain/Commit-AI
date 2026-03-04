@@ -13,8 +13,8 @@ Thank you for your interest in contributing to Commit-AI! This document provides
 
 1. Fork and clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/Commit-Ai-Go.git
-cd Commit-Ai-Go
+git clone https://github.com/YOUR_USERNAME/Commit-Ai.git
+cd Commit-Ai
 ```
 
 2. Install dependencies:
@@ -75,7 +75,7 @@ commit-ai -c
 ## 🏗️ Project Structure
 
 ```
-Commit-Ai-Go/
+Commit-Ai/
 ├── cmd/              # Command-line interface
 │   └── root.go       # Main command logic
 ├── internal/         # Internal packages

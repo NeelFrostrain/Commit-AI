@@ -1,5 +1,5 @@
 # 1. Configuration
-$repoURL = "https://github.com/NeelFrostrain/Commit-Ai-Go/releases/latest/download/commit-ai.exe"
+$repoURL = "https://github.com/NeelFrostrain/Commit-Ai/releases/latest/download/commit-ai.exe"
 $installDir = Join-Path $env:LOCALAPPDATA "CommitAI"
 $exePath = Join-Path $installDir "commit-ai.exe"
 

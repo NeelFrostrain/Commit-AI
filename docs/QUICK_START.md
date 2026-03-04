@@ -5,7 +5,7 @@
 ### Step 1: Install
 ```bash
 # If you have Go installed:
-go install github.com/NeelFrostrain/Commit-Ai-Go@latest
+go install github.com/NeelFrostrain/Commit-Ai@latest
 
 # Or download the binary from releases
 ```
