@@ -31,6 +31,7 @@ var (
 	commitFlag  bool
 	yesFlag     bool
 	verboseFlag bool
+	emojiFlag   bool
 	modelFlag   string
 )
 
@@ -88,6 +89,7 @@ func init() {
 	rootCmd.Flags().BoolVarP(&commitFlag, "commit", "c", false, "Commit changes after selection")
 	rootCmd.Flags().BoolVarP(&yesFlag, "yes", "y", false, "Skip confirmation prompts")
 	rootCmd.Flags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show detailed information")
+	rootCmd.Flags().BoolVarP(&emojiFlag, "emoji", "e", false, "Add emojis to commit messages")
 	rootCmd.Flags().StringVarP(&modelFlag, "model", "m", "", "Override AI model (default: llama-3.1-8b-instant)")
 
 	// Update command flags
@@ -228,7 +230,7 @@ Your commit messages should be:
 - Focused on impact and reasoning, not just changes
 - Following Conventional Commits format strictly`,
 			},
-			{Role: groq.RoleUser, Content: ai.BuildPrompt(fullContext)},
+			{Role: groq.RoleUser, Content: ai.BuildPrompt(fullContext, emojiFlag)},
 		},
 		Temperature: &temp,
 	})

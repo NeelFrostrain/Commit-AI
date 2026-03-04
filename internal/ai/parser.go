@@ -6,11 +6,63 @@ import (
 )
 
 // BuildPrompt creates an enhanced prompt with better context and instructions
-func BuildPrompt(diff string) string {
+func BuildPrompt(diff string, useEmojis bool) string {
+	emojiInstructions := ""
+	emojiExamples := ""
+
+	if useEmojis {
+		emojiInstructions = `
+EMOJI USAGE:
+Add relevant emojis to make commits more visual and scannable:
+- ✨ feat: New features
+- 🐛 fix: Bug fixes
+- 📝 docs: Documentation
+- ♻️ refactor: Code refactoring
+- ⚡ perf: Performance improvements
+- 💄 style: UI/styling changes
+- ✅ test: Tests
+- 🔧 chore: Maintenance
+- 🏗️ build: Build system
+- 👷 ci: CI/CD changes
+- 🔒 security: Security fixes
+- 🌐 i18n: Internationalization
+- ♿ a11y: Accessibility
+- 🎨 design: Design improvements
+
+Use emojis in:
+1. Commit title: "✨ feat(api): add user authentication"
+2. Category headers: "✨ FEATURES:", "🐛 BUG FIXES:", "📚 DOCUMENTATION:"
+3. Bullet points for visual hierarchy`
+
+		emojiExamples = `
+EXAMPLE WITH EMOJIS:
+<options>
+1. ✨ feat(api): add user authentication endpoints
+2. 🔒 feat(auth): implement JWT-based login system
+3. 🔧 chore(security): add authentication middleware
+</options>
+<report>
+✨ FEATURES:
+- 🔐 Added JWT authentication with RS256 signing
+- 🚦 Implemented login endpoint with rate limiting (5 attempts/min)
+- 🛡️ Created middleware for protected routes with role-based access
+
+🔧 TECHNICAL DETAILS:
+- 📊 5 files changed: 250 insertions, 10 deletions
+- ✅ Test coverage: 90%%
+- ⚡ Token validation: <1ms average
+
+💡 IMPACT:
+- 🔒 Improved security with industry-standard JWT
+- 🚀 Better user experience with automatic token refresh
+- 📉 Reduced server load with stateless authentication
+</report>`
+	}
+
 	return fmt.Sprintf(`You are a Principal Engineer analyzing git changes. Generate 3 professional commit message titles and a comprehensive technical report.
 
 CRITICAL: You MUST use the exact XML-style tags shown below. Do not use markdown, do not use any other format.
-
+%s
 ANALYSIS REQUIREMENTS:
 1. Identify PRIMARY change type and scope from file paths
 2. Analyze WHAT changed, WHY it matters, and the IMPACT
@@ -64,31 +116,6 @@ IMPORTANT NOTES:
 - Use clear category names like FEATURES, BUG FIXES, IMPROVEMENTS, etc.
 - Keep categories relevant to the actual changes
 
-EXAMPLE OUTPUT (WITH BREAKING CHANGES):
-<options>
-1. feat(api): add user authentication endpoints
-2. feat(auth): implement JWT-based login system
-3. chore(security): add authentication middleware
-</options>
-<report>
-BREAKING CHANGES:
-- API endpoint /login now requires POST instead of GET
-- Authentication token format changed from Bearer to JWT
-
-FEATURES:
-- Added JWT authentication with RS256 signing
-- Implemented login endpoint with rate limiting
-- Created middleware for protected routes
-
-TECHNICAL DETAILS:
-- 5 files changed: 250 insertions, 10 deletions
-- Test coverage: 90%%
-
-IMPACT:
-- Improved security with industry-standard JWT
-- Better user experience with automatic token refresh
-</report>
-
 EXAMPLE OUTPUT (NO BREAKING CHANGES):
 <options>
 1. fix(cache): resolve memory leak in cleanup method
@@ -109,9 +136,9 @@ IMPACT:
 - Prevents memory leak in production
 - Improves application stability
 </report>
-
+%s
 NOW ANALYZE THIS DIFF:
-%s`, diff)
+%s`, emojiInstructions, emojiExamples, diff)
 }
 
 // ParseResponse extracts title and report from AI response (legacy single-option format)
@@ -198,9 +225,23 @@ func ParseMultiResponse(input string) ([]string, string) {
 func ValidateCommitMessage(msg string) bool {
 	validTypes := []string{"feat", "fix", "docs", "style", "refactor", "perf", "test", "chore", "build", "ci", "revert"}
 
+	// Remove leading emojis and whitespace for validation
+	cleaned := strings.TrimSpace(msg)
+	// Skip emoji characters (they're typically 1-4 bytes in UTF-8)
+	for len(cleaned) > 0 {
+		r := []rune(cleaned)[0]
+		// Check if first character is an emoji (Unicode range)
+		if r > 127 {
+			cleaned = string([]rune(cleaned)[1:])
+			cleaned = strings.TrimSpace(cleaned)
+		} else {
+			break
+		}
+	}
+
 	// Check for type at the beginning
 	for _, t := range validTypes {
-		if strings.HasPrefix(msg, t+":") || strings.HasPrefix(msg, t+"(") {
+		if strings.HasPrefix(cleaned, t+":") || strings.HasPrefix(cleaned, t+"(") {
 			return true
 		}
 	}
